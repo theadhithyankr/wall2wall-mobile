@@ -67,19 +67,19 @@ function RootLayoutNav() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="otp" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {canManageTools && <Stack.Screen name="add-tool" options={{ title: "Add Tool" }} />}
-        {canManageLocations && <Stack.Screen name="add-location" options={{ title: "Add Location" }} />}
-        {canAssignTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
-        {canAccessTodoList && <Stack.Screen name="todo-list" options={{ title: "Todo List" }} />}
-        {canAddWorkers && <Stack.Screen name="add-worker" options={{ title: "Add Worker" }} />}
-        {canViewWorkers && <Stack.Screen name="workers" options={{ title: "Workers" }} />}
-        {canManageManagers && <Stack.Screen name="add-manager" options={{ title: "Add Manager" }} />}
-        {canManageManagers && <Stack.Screen name="managers" options={{ title: "Managers" }} />}
-      <Stack.Screen name="location-detail/[id]" options={{ title: "Location Details" }} />
-      <Stack.Screen name="tool-detail/[id]" options={{ title: "Tool Details" }} />
-      {canViewReports && <Stack.Screen name="attendance-report" options={{ title: "Attendance Report" }} />}
-      {canViewReports && <Stack.Screen name="tool-report" options={{ title: "Tool Report" }} />}
-      <Stack.Screen name="settings" options={{ title: "Settings" }} />
+      {canManageTools && <Stack.Screen name="add-tool" options={{ headerShown: false }} />}
+        {canManageLocations && <Stack.Screen name="add-location" options={{ headerShown: false }} />}
+        {canAssignTools && <Stack.Screen name="assign-tool" options={{ headerShown: false }} />}
+        {canAccessTodoList && <Stack.Screen name="todo-list" options={{ headerShown: false }} />}
+        {canAddWorkers && <Stack.Screen name="add-worker" options={{ headerShown: false }} />}
+        {canViewWorkers && <Stack.Screen name="workers" options={{ headerShown: false }} />}
+        {canManageManagers && <Stack.Screen name="add-manager" options={{ headerShown: false }} />}
+        {canManageManagers && <Stack.Screen name="managers" options={{ headerShown: false }} />}
+      <Stack.Screen name="location-detail/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="tool-detail/[id]" options={{ headerShown: false }} />
+      {canViewReports && <Stack.Screen name="attendance-report" options={{ headerShown: false }} />}
+      {canViewReports && <Stack.Screen name="tool-report" options={{ headerShown: false }} />}
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
     </Stack>
   );
 }
