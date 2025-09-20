@@ -23,11 +23,11 @@ export default function ToolsScreen() {
   const isAdmin = user?.role === 'Admin';
   const isWorker = user?.role === 'Worker';
   
-  const canAddTools = isManager; // Only managers can add tools
-  const canEditTools = isManager; // Only managers can edit tools
-  const canDeleteTools = isManager; // Only managers can delete tools
+  const canAddTools = isManager || isAdmin; // Managers and admins can add tools
+  const canEditTools = isManager || isAdmin; // Managers and admins can edit tools
+  const canDeleteTools = isManager || isAdmin; // Managers and admins can delete tools
   const canViewTools = true; // All roles can view tools
-  const canAssignTools = isManager; // Only managers can assign tools
+  const canAssignTools = isManager || isAdmin; // Managers and admins can assign tools
 
   const filteredTools = tools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

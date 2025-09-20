@@ -21,7 +21,7 @@ export default function AttendanceScreen() {
   
   const canViewAllAttendance = isAdmin || isManager; // Admin and Manager can view all attendance
   const canViewOwnAttendance = true; // All roles can view their own attendance
-  const canMarkAttendance = isWorker; // Only workers can mark attendance
+  const canMarkAttendance = isWorker || isManager; // Workers and managers can mark attendance
 
   const today = new Date().toISOString().split('T')[0];
   
@@ -136,16 +136,16 @@ export default function AttendanceScreen() {
 
   // Initialize location detection
   useEffect(() => {
-    if (isWorker) {
+    if (isWorker || isManager) {
       requestLocationPermission();
     }
-  }, [isWorker]);
+  }, [isWorker, isManager]);
 
   useEffect(() => {
-    if (isWorker && locationPermission) {
+    if ((isWorker || isManager) && locationPermission) {
       findNearestWorkLocation();
     }
-  }, [locationPermission, locations, isWorker]);
+  }, [locationPermission, locations, isWorker, isManager]);
 
   const handleClockIn = async () => {
     if (!user) return;
@@ -256,8 +256,8 @@ export default function AttendanceScreen() {
   };
 
   const renderTodayView = () => {
-    // For workers, show a simple clock in/out interface
-    if (isWorker) {
+    // For workers and managers, show a simple clock in/out interface
+    if (isWorker || isManager) {
       const { isClockedIn } = getUserTodayStatus();
       const detectedLocationName = nearestWorkLocation ? getLocationName(nearestWorkLocation) : null;
       

@@ -25,13 +25,13 @@ function RootLayoutNav() {
   const canViewWorkers = isAdmin || isManager;
   const canManageManagers = isAdmin;
   
-  // Tool Management - Manager only for CRUD, others view only
-  const canManageTools = isManager;
+  // Tool Management - Manager and Admin can CRUD, others view only
+  const canManageTools = isManager || isAdmin;
   const canViewTools = true; // All roles can view
-  const canAssignTools = isManager;
-  
-  // Location Management - Manager only for CRUD, others view only
-  const canManageLocations = isManager;
+  const canAssignTools = isManager || isAdmin;
+
+  // Location Management - Manager and Admin can CRUD, others view only
+  const canManageLocations = isManager || isAdmin;
   const canViewLocations = true; // All roles can view
   
   // Reports & Analytics
@@ -41,7 +41,7 @@ function RootLayoutNav() {
   
   // Todo List Management
   const canAccessTodoList = isAdmin || isManager || isWorker;
-  const canManageTodoList = isManager; // Only manager can CRUD
+  const canManageTodoList = isManager || isAdmin; // Manager and Admin can CRUD
   const canOversightTodoList = isAdmin; // Admin can view for oversight
   
   // Settings

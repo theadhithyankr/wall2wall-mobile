@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Wrench, MapPin, Users, AlertTriangle, Clock, CheckSquare } from 'lucide-react-native';
+import { Plus, Wrench, MapPin, Users, AlertTriangle, Clock, CheckSquare, UserCheck, FileText } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function DashboardScreen() {
@@ -15,42 +15,152 @@ export default function DashboardScreen() {
   const isAdmin = user?.role === 'Admin';
   const isManager = user?.role === 'Manager';
 
-  const quickActions = isWorker ? [] : [
-    ...(isManager ? [{
+  const quickActions = isWorker ? [
+    // Worker Quick Actions - Limited to their own tasks and attendance
+    {
+      title: 'Clock In/Out',
+      icon: Clock,
+      color: '#059669',
+      route: '/(tabs)/attendance',
+      testId: 'quick-attendance'
+    },
+    {
+      title: 'My Tools',
+      icon: Wrench,
+      color: '#2563eb',
+      route: '/(tabs)/tools',
+      testId: 'quick-my-tools'
+    },
+    {
+      title: 'Locations',
+      icon: MapPin,
+      color: '#7c3aed',
+      route: '/(tabs)/locations',
+      testId: 'quick-locations'
+    }
+  ] : isManager ? [
+    // Manager Quick Actions - Full management capabilities
+    {
       title: 'Add Tool',
       icon: Wrench,
       color: '#2563eb',
       route: '/add-tool',
       testId: 'quick-add-tool'
-    }] : []),
-    ...(isManager ? [{
+    },
+    {
       title: 'Add Location',
       icon: MapPin,
       color: '#059669',
       route: '/add-location',
       testId: 'quick-add-location'
-    }] : []),
-    ...(isAdmin ? [{
+    },
+    {
       title: 'Add Worker',
       icon: Users,
       color: '#7c3aed',
       route: '/add-worker',
       testId: 'quick-add-worker'
-    }] : []),
-    ...(isAdmin ? [{
-      title: 'Todo List',
-      icon: CheckSquare,
-      color: '#f59e0b',
-      route: '/todo-list',
-      testId: 'quick-todo-list'
-    }] : []),
-    ...(isManager ? [{
+    },
+    {
       title: 'Assign Tool',
       icon: Plus,
       color: '#dc2626',
       route: '/assign-tool',
       testId: 'quick-assign-tool'
-    }] : [])
+    },
+    {
+      title: 'Todo List',
+      icon: CheckSquare,
+      color: '#f59e0b',
+      route: '/todo-list',
+      testId: 'quick-todo-list'
+    },
+    {
+      title: 'Attendance',
+      icon: Clock,
+      color: '#059669',
+      route: '/(tabs)/attendance',
+      testId: 'quick-attendance'
+    },
+    {
+      title: 'Workers',
+      icon: Users,
+      color: '#6366f1',
+      route: '/workers',
+      testId: 'quick-workers'
+    },
+    {
+      title: 'Reports',
+      icon: FileText,
+      color: '#8b5cf6',
+      route: '/attendance-report',
+      testId: 'quick-reports'
+    }
+  ] : [
+    // Admin Quick Actions - Complete system access
+    {
+      title: 'Add Tool',
+      icon: Wrench,
+      color: '#2563eb',
+      route: '/add-tool',
+      testId: 'quick-add-tool'
+    },
+    {
+      title: 'Add Location',
+      icon: MapPin,
+      color: '#059669',
+      route: '/add-location',
+      testId: 'quick-add-location'
+    },
+    {
+      title: 'Add Worker',
+      icon: Users,
+      color: '#7c3aed',
+      route: '/add-worker',
+      testId: 'quick-add-worker'
+    },
+    {
+      title: 'Add Manager',
+      icon: UserCheck,
+      color: '#f59e0b',
+      route: '/add-manager',
+      testId: 'quick-add-manager'
+    },
+    {
+      title: 'Assign Tool',
+      icon: Plus,
+      color: '#dc2626',
+      route: '/assign-tool',
+      testId: 'quick-assign-tool'
+    },
+    {
+      title: 'Todo List',
+      icon: CheckSquare,
+      color: '#f59e0b',
+      route: '/todo-list',
+      testId: 'quick-todo-list'
+    },
+    {
+      title: 'Workers',
+      icon: Users,
+      color: '#6366f1',
+      route: '/workers',
+      testId: 'quick-workers'
+    },
+    {
+      title: 'Managers',
+      icon: UserCheck,
+      color: '#8b5cf6',
+      route: '/managers',
+      testId: 'quick-managers'
+    },
+    {
+      title: 'Reports',
+      icon: FileText,
+      color: '#10b981',
+      route: '/attendance-report',
+      testId: 'quick-reports'
+    }
   ];
 
   const alerts = [];

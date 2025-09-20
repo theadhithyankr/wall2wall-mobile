@@ -51,9 +51,9 @@ export default function TodoListScreen() {
   const isWorker = user?.role === 'Worker';
   
   const canAccessTodoList = isManager || isAdmin; // Manager CRUD, Admin oversight
-  const canCreateTodos = isManager; // Only managers can create todos
-  const canEditTodos = isManager; // Only managers can edit todos
-  const canDeleteTodos = isManager; // Only managers can delete todos
+  const canCreateTodos = isManager || isAdmin; // Managers and admins can create todos
+  const canEditTodos = isManager || isAdmin; // Managers and admins can edit todos
+  const canDeleteTodos = isManager || isAdmin; // Managers and admins can delete todos
   const canViewTodos = isManager || isAdmin; // Both can view todos
 
   useEffect(() => {

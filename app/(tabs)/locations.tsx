@@ -17,9 +17,9 @@ export default function LocationsScreen() {
   const isAdmin = user?.role === 'Admin';
   const isWorker = user?.role === 'Worker';
   
-  const canAddLocations = isManager; // Only managers can add locations
-  const canEditLocations = isManager; // Only managers can edit locations
-  const canDeleteLocations = isManager; // Only managers can delete locations
+  const canAddLocations = isManager || isAdmin; // Managers and admins can add locations
+  const canEditLocations = isManager || isAdmin; // Managers and admins can edit locations
+  const canDeleteLocations = isManager || isAdmin; // Managers and admins can delete locations
   const canViewLocations = true; // All roles can view locations
 
   const filteredLocations = locations.filter(location =>
