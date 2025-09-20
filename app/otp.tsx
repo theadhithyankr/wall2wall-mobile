@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvo
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Shield, ArrowLeft } from 'lucide-react-native';
+import { Building2, ArrowLeft } from 'lucide-react-native';
 
 export default function OTPScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -107,13 +107,14 @@ export default function OTPScreen() {
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Shield size={32} color="#2563eb" />
-            </View>
-            <Text style={styles.title}>Verify OTP</Text>
-            <Text style={styles.subtitle}>
-              Enter the 6-digit code sent to{'\n'}
-              <Text style={styles.phoneNumber}>{phone}</Text>
-            </Text>
+            <Building2 size={32} color="#2563eb" />
+          </View>
+          <Text style={styles.title}>Wall2Wall</Text>
+          <Text style={styles.subtitle}>Verify Your Number</Text>
+          <Text style={styles.description}>
+            Enter the 6-digit code sent to{' '}
+            <Text style={styles.phoneNumber}>{phone}</Text>
+          </Text>
           </View>
 
           <View style={styles.form}>
@@ -193,13 +194,18 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
     fontSize: 28,
@@ -208,6 +214,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
+    fontSize: 18,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  description: {
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',

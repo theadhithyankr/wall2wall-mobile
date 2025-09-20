@@ -47,13 +47,27 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const login = async (phone: string, otp: string): Promise<boolean> => {
     try {
-      // Simulate OTP verification (accept any 6-digit OTP for demo)
+      // Simulate OTP verification and role assignment
       if (otp.length === 6) {
+        // Demo: Assign roles based on phone number prefix
+        // 9900* -> Admin, 9911* -> Manager, others -> Worker
+        const rolePrefix = phone.slice(-2);
+        let role: 'Admin' | 'Manager' | 'Worker' = 'Worker';
+        let name = 'Worker';
+
+        if (rolePrefix === '00') {
+          role = 'Admin';
+          name = 'Admin';
+        } else if (rolePrefix === '11') {
+          role = 'Manager';
+          name = 'Manager';
+        }
+
         const newUser: User = {
-          id: 'manager-1',
+          id: `${role.toLowerCase()}-${Date.now()}`,
           phone,
-          name: 'Manager',
-          role: 'Manager',
+          name,
+          role,
           createdAt: new Date().toISOString()
         };
         

@@ -78,8 +78,10 @@ export interface User {
   id: string;
   phone: string;
   name?: string;
-  role: 'Manager';
+  role: 'Admin' | 'Manager' | 'Worker';
   createdAt: string;
+  skills?: string[];
+  isActive?: boolean;
 }
 
 export interface DashboardStats {

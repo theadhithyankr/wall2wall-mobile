@@ -2,15 +2,19 @@ import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
-import { Plus, Wrench, MapPin, Users, AlertTriangle, Clock } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
+import { Plus, Wrench, MapPin, Users, AlertTriangle, Clock, CheckSquare } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function DashboardScreen() {
   const { getDashboardStats, isLoading } = useData();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const stats = getDashboardStats();
+  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'Admin';
 
-  const quickActions = [
+  const quickActions = isWorker ? [] : [
     {
       title: 'Add Tool',
       icon: Wrench,
@@ -72,8 +76,10 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.title}>Dashboard</Text>
-        <Text style={styles.subtitle}>Interior Design Operations</Text>
+        <Text style={styles.title}>{isWorker ? 'My Dashboard' : 'Dashboard'}</Text>
+        <Text style={styles.subtitle}>
+          {isWorker ? 'Your Tasks and Attendance' : 'Interior Design Operations'}
+        </Text>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -81,45 +87,72 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.kpiGrid}>
-            <View style={styles.kpiCard}>
-              <View style={styles.kpiHeader}>
-                <Wrench size={20} color="#2563eb" />
-                <Text style={styles.kpiLabel}>Tools</Text>
-              </View>
-              <Text style={styles.kpiValue}>{stats.toolsAvailable}</Text>
-              <Text style={styles.kpiSubtext}>Available</Text>
-              <Text style={styles.kpiSecondary}>{stats.toolsAssigned} Assigned</Text>
-            </View>
+            {isWorker ? (
+              <>
+                <View style={styles.kpiCard}>
+                  <View style={styles.kpiHeader}>
+                    <CheckSquare size={20} color="#2563eb" />
+                    <Text style={styles.kpiLabel}>Tasks</Text>
+                  </View>
+                  <Text style={styles.kpiValue}>5</Text>
+                  <Text style={styles.kpiSubtext}>Assigned</Text>
+                  <Text style={styles.kpiSecondary}>2 Due Today</Text>
+                </View>
 
-            <View style={styles.kpiCard}>
-              <View style={styles.kpiHeader}>
-                <MapPin size={20} color="#059669" />
-                <Text style={styles.kpiLabel}>Locations</Text>
-              </View>
-              <Text style={styles.kpiValue}>{stats.activeLocations}</Text>
-              <Text style={styles.kpiSubtext}>Active</Text>
-            </View>
+                <View style={styles.kpiCard}>
+                  <View style={styles.kpiHeader}>
+                    <Clock size={20} color="#059669" />
+                    <Text style={styles.kpiLabel}>Hours</Text>
+                  </View>
+                  <Text style={styles.kpiValue}>8.5</Text>
+                  <Text style={styles.kpiSubtext}>Today</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.kpiCard}>
+                  <View style={styles.kpiHeader}>
+                    <Wrench size={20} color="#2563eb" />
+                    <Text style={styles.kpiLabel}>Tools</Text>
+                  </View>
+                  <Text style={styles.kpiValue}>{stats.toolsAvailable}</Text>
+                  <Text style={styles.kpiSubtext}>Available</Text>
+                  <Text style={styles.kpiSecondary}>{stats.toolsAssigned} Assigned</Text>
+                </View>
 
-            <View style={styles.kpiCard}>
-              <View style={styles.kpiHeader}>
-                <Users size={20} color="#7c3aed" />
-                <Text style={styles.kpiLabel}>Workers</Text>
-              </View>
-              <Text style={styles.kpiValue}>{stats.workersClocked}</Text>
-              <Text style={styles.kpiSubtext}>Clocked In</Text>
-            </View>
+                <View style={styles.kpiCard}>
+                  <View style={styles.kpiHeader}>
+                    <MapPin size={20} color="#059669" />
+                    <Text style={styles.kpiLabel}>Locations</Text>
+                  </View>
+                  <Text style={styles.kpiValue}>{stats.activeLocations}</Text>
+                  <Text style={styles.kpiSubtext}>Active</Text>
+                </View>
 
-            <View style={styles.kpiCard}>
-              <View style={styles.kpiHeader}>
-                <Clock size={20} color="#dc2626" />
-                <Text style={styles.kpiLabel}>Rentals</Text>
-              </View>
-              <Text style={styles.kpiValue}>{stats.rentedToolsDueToday}</Text>
-              <Text style={styles.kpiSubtext}>Due Today</Text>
-              {stats.rentedToolsOverdue > 0 && (
-                <Text style={styles.kpiOverdue}>{stats.rentedToolsOverdue} Overdue</Text>
-              )}
-            </View>
+                {isAdmin && (
+                  <View style={styles.kpiCard}>
+                    <View style={styles.kpiHeader}>
+                      <Users size={20} color="#7c3aed" />
+                      <Text style={styles.kpiLabel}>Workers</Text>
+                    </View>
+                    <Text style={styles.kpiValue}>{stats.workersClocked}</Text>
+                    <Text style={styles.kpiSubtext}>Clocked In</Text>
+                  </View>
+                )}
+
+                <View style={styles.kpiCard}>
+                  <View style={styles.kpiHeader}>
+                    <Clock size={20} color="#dc2626" />
+                    <Text style={styles.kpiLabel}>Rentals</Text>
+                  </View>
+                  <Text style={styles.kpiValue}>{stats.rentedToolsDueToday}</Text>
+                  <Text style={styles.kpiSubtext}>Due Today</Text>
+                  {stats.rentedToolsOverdue > 0 && (
+                    <Text style={styles.kpiOverdue}>{stats.rentedToolsOverdue} Overdue</Text>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         </View>
 

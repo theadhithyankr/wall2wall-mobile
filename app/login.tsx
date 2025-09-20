@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvo
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Phone } from 'lucide-react-native';
+import { Building2 } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
@@ -54,10 +54,11 @@ export default function LoginScreen() {
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Phone size={32} color="#2563eb" />
-            </View>
-            <Text style={styles.title}>Interior Design Ops</Text>
-            <Text style={styles.subtitle}>Enter your phone number to continue</Text>
+            <Building2 size={32} color="#2563eb" />
+          </View>
+          <Text style={styles.title}>Wall2Wall</Text>
+          <Text style={styles.subtitle}>Interior Design Operations</Text>
+          <Text style={styles.description}>Enter your phone number to continue</Text>
           </View>
 
           <View style={styles.form}>
@@ -107,13 +108,18 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#dbeafe',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
     fontSize: 28,
@@ -122,6 +128,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
+    fontSize: 18,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  description: {
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',

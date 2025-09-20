@@ -1,8 +1,12 @@
 import { Tabs } from "expo-router";
-import { LayoutDashboard, Wrench, MapPin, Clock, MoreHorizontal } from "lucide-react-native";
+import { LayoutDashboard, Wrench, MapPin, Clock, MoreHorizontal, CheckSquare } from "lucide-react-native";
 import React from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isWorker = user?.role === 'Worker';
+
   return (
     <Tabs
       screenOptions={{
@@ -28,20 +32,29 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} />,
         }}
       />
-      <Tabs.Screen
-        name="tools"
-        options={{
-          title: "Tools",
-          tabBarIcon: ({ color, size }) => <Wrench color={color} size={size} />,
-        }}
-      />
-      <Tabs.Screen
-        name="locations"
-        options={{
-          title: "Locations",
-          tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
-        }}
-      />
+      {!isWorker && <Tabs.Screen
+            name="tools"
+            options={{
+              title: "Tools",
+              tabBarIcon: ({ color, size }) => <Wrench color={color} size={size} />,
+            }}
+          />}
+      {!isWorker && <Tabs.Screen
+            name="locations"
+            options={{
+              title: "Locations",
+              tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
+            }}
+          />}
+      {isWorker ? (
+        <Tabs.Screen
+          name="tasks"
+          options={{
+            title: "Tasks",
+            tabBarIcon: ({ color, size }) => <CheckSquare color={color} size={size} />,
+          }}
+        />
+      ) : null}
       <Tabs.Screen
         name="attendance"
         options={{
