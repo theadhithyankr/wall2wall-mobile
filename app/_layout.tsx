@@ -67,18 +67,18 @@ function RootLayoutNav() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="otp" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {canManageTools && <Stack.Screen name="add-tool" options={{ headerShown: false }} />}
-        {canManageLocations && <Stack.Screen name="add-location" options={{ headerShown: false }} />}
-        {canAssignTools && <Stack.Screen name="assign-tool" options={{ headerShown: false }} />}
-        {canAccessTodoList && <Stack.Screen name="todo-list" options={{ headerShown: false }} />}
-        {canAddWorkers && <Stack.Screen name="add-worker" options={{ headerShown: false, presentation: 'card' }} />}
-        {canViewWorkers && <Stack.Screen name="workers" options={{ headerShown: false }} />}
-        {canManageManagers && <Stack.Screen name="add-manager" options={{ headerShown: false }} />}
-        {canManageManagers && <Stack.Screen name="managers" options={{ headerShown: false }} />}
+      <Stack.Screen name="add-tool" options={{ headerShown: false }} />
+      <Stack.Screen name="add-location" options={{ headerShown: false }} />
+      <Stack.Screen name="assign-tool" options={{ headerShown: false }} />
+      <Stack.Screen name="todo-list" options={{ headerShown: false }} />
+      <Stack.Screen name="add-worker" options={{ headerShown: false, presentation: 'card' }} />
+      <Stack.Screen name="workers" options={{ headerShown: false }} />
+      <Stack.Screen name="add-manager" options={{ headerShown: false }} />
+      <Stack.Screen name="managers" options={{ headerShown: false }} />
       <Stack.Screen name="location-detail/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="tool-detail/[id]" options={{ headerShown: false }} />
-      {canViewReports && <Stack.Screen name="attendance-report" options={{ headerShown: false }} />}
-      {canViewReports && <Stack.Screen name="tool-report" options={{ headerShown: false }} />}
+      <Stack.Screen name="attendance-report" options={{ headerShown: false }} />
+      <Stack.Screen name="tool-report" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />
     </Stack>
   );
