@@ -6,27 +6,87 @@ import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, User, Calendar, LogIn, LogOut, MapPin } from 'lucide-react-native';
 
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+
+type TabType = 'today' | 'all';
+
+interface WorkerStats {
+  firstIn?: string;
+  lastOut?: string;
+  location: string;
+}
+
+interface LocationPermissions {
+  canViewAllAttendance: boolean;
+  canViewOwnAttendance: boolean;
+  canMarkAttendance: boolean;
+}
+
+interface UserTodayStatus {
+  isClockedIn: boolean;
+  lastAction?: string;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const LOCATION_CONFIG = {
+  ACCURACY: Location.Accuracy.High,
+  TIMEOUT: 10000,
+  EARTH_RADIUS_KM: 6371,
+  WORK_LOCATION_RADIUS_KM: 0.5,
+} as const;
+
+const DATE_FORMATS = {
+  TIME: {
+    hour: '2-digit' as const,
+    minute: '2-digit' as const,
+    hour12: true,
+  },
+  DATE: {
+    month: 'short' as const,
+    day: 'numeric' as const,
+    year: 'numeric' as const,
+  },
+} as const;
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function AttendanceScreen() {
+  // ========================================
+  // HOOKS & STATE
+  // ========================================
+  
   const { attendance, workers, locations, recordAttendance } = useData();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
+  
+  const [activeTab, setActiveTab] = useState<TabType>('today');
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [nearestWorkLocation, setNearestWorkLocation] = useState<string | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
 
-  // Attendance permissions based on role matrix
+  // ========================================
+  // COMPUTED VALUES
+  // ========================================
+  
   const isAdmin = user?.role === 'Admin';
   const isManager = user?.role === 'Manager';
   const isWorker = user?.role === 'Worker';
   
-  const canViewAllAttendance = isAdmin || isManager; // Admin and Manager can view all attendance
-  const canViewOwnAttendance = true; // All roles can view their own attendance
-  const canMarkAttendance = isWorker || isManager; // Workers and managers can mark attendance
+  const permissions: LocationPermissions = {
+    canViewAllAttendance: isAdmin || isManager,
+    canViewOwnAttendance: true,
+    canMarkAttendance: isWorker || isManager,
+  };
 
   const today = new Date().toISOString().split('T')[0];
   
-  // Filter attendance based on user permissions
-  const filteredAttendance = canViewAllAttendance 
+  const filteredAttendance = permissions.canViewAllAttendance 
     ? attendance 
     : attendance.filter(record => record.workerId === user?.id);
   
@@ -34,35 +94,46 @@ export default function AttendanceScreen() {
     record.dateTime.split('T')[0] === today
   );
 
-  const getWorkerName = (workerId: string) => {
+  // ========================================
+  // UTILITY FUNCTIONS
+  // ========================================
+  
+  const getWorkerName = (workerId: string): string => {
     const worker = workers.find(w => w.id === workerId);
     return worker?.name || 'Unknown Worker';
   };
 
-  const getLocationName = (locationId?: string) => {
+  const getLocationName = (locationId?: string): string => {
     if (!locationId) return 'No location';
     const location = locations.find(l => l.id === locationId);
     return location?.name || 'Unknown Location';
   };
 
-  const formatTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+  const formatTime = (dateTime: string): string => {
+    return new Date(dateTime).toLocaleTimeString('en-US', DATE_FORMATS.TIME);
   };
 
-  const formatDate = (dateTime: string) => {
-    return new Date(dateTime).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const formatDate = (dateTime: string): string => {
+    return new Date(dateTime).toLocaleDateString('en-US', DATE_FORMATS.DATE);
   };
 
-  // Location detection functions
-  const requestLocationPermission = async () => {
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = LOCATION_CONFIG.EARTH_RADIUS_KM;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // ========================================
+  // LOCATION SERVICES
+  // ========================================
+  
+  const requestLocationPermission = async (): Promise<boolean> => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setLocationPermission(status === 'granted');
@@ -73,7 +144,7 @@ export default function AttendanceScreen() {
     }
   };
 
-  const getCurrentLocation = async () => {
+  const getCurrentLocation = async (): Promise<Location.LocationObject | null> => {
     try {
       if (!locationPermission) {
         const hasPermission = await requestLocationPermission();
@@ -81,8 +152,8 @@ export default function AttendanceScreen() {
       }
 
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-        timeout: 10000,
+        accuracy: LOCATION_CONFIG.ACCURACY,
+        // Removed timeout as it's not a valid LocationOptions property
       });
       
       setCurrentLocation(location);
@@ -93,70 +164,49 @@ export default function AttendanceScreen() {
     }
   };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // Radius of the Earth in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c; // Distance in kilometers
-    return distance * 1000; // Convert to meters
-  };
-
-  const findNearestWorkLocation = async () => {
-    const location = await getCurrentLocation();
-    if (!location || !locations.length) return null;
-
+  const findNearestWorkLocation = (userLocation: Location.LocationObject): string | null => {
     let nearestLocation = null;
     let minDistance = Infinity;
-    const PROXIMITY_THRESHOLD = 500; // 500 meters
 
-    for (const workLocation of locations) {
-      if (workLocation.latitude && workLocation.longitude) {
+    for (const location of locations) {
+      if (location.latitude && location.longitude) {
         const distance = calculateDistance(
-          location.coords.latitude,
-          location.coords.longitude,
-          workLocation.latitude,
-          workLocation.longitude
+          userLocation.coords.latitude,
+          userLocation.coords.longitude,
+          location.latitude,
+          location.longitude
         );
 
-        if (distance < minDistance && distance <= PROXIMITY_THRESHOLD) {
+        if (distance < LOCATION_CONFIG.WORK_LOCATION_RADIUS_KM && distance < minDistance) {
           minDistance = distance;
-          nearestLocation = workLocation.id;
+          nearestLocation = location.id;
         }
       }
     }
 
-    setNearestWorkLocation(nearestLocation);
     return nearestLocation;
   };
 
-  // Initialize location detection
-  useEffect(() => {
-    if (isWorker || isManager) {
-      requestLocationPermission();
-    }
-  }, [isWorker, isManager]);
-
-  useEffect(() => {
-    if ((isWorker || isManager) && locationPermission) {
-      findNearestWorkLocation();
-    }
-  }, [locationPermission, locations, isWorker, isManager]);
-
-  const handleClockIn = async () => {
-    if (!user) return;
+  // ========================================
+  // ATTENDANCE LOGIC
+  // ========================================
+  
+  const handleClockIn = async (): Promise<void> => {
+    const location = await getCurrentLocation();
+    const detectedLocationId = location ? findNearestWorkLocation(location) : null;
     
-    // Get the nearest work location
-    const detectedLocationId = await findNearestWorkLocation();
-    const locationName = detectedLocationId ? getLocationName(detectedLocationId) : 'No nearby location detected';
-    
+    if (!detectedLocationId) {
+      Alert.alert(
+        'Location Required',
+        'You must be at a registered work location to clock in.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     Alert.alert(
       'Clock In',
-      `Are you sure you want to clock in?\n\nDetected Location: ${locationName}`,
+      `Clock in at ${getLocationName(detectedLocationId)}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -164,15 +214,13 @@ export default function AttendanceScreen() {
           onPress: async () => {
             try {
               await recordAttendance({
-                workerId: user.id,
+                workerId: user!.id,
                 action: 'Clock In',
                 dateTime: new Date().toISOString(),
                 workLocationId: detectedLocationId || undefined,
-                latitude: currentLocation?.coords.latitude,
-                longitude: currentLocation?.coords.longitude,
+                notes: '',
                 address: currentLocation ? `${currentLocation.coords.latitude.toFixed(6)}, ${currentLocation.coords.longitude.toFixed(6)}` : undefined
               });
-              Alert.alert('Success', `You have successfully clocked in${detectedLocationId ? ` at ${locationName}` : ''}!`);
             } catch (error) {
               Alert.alert('Error', 'Failed to clock in. Please try again.');
             }
@@ -182,16 +230,15 @@ export default function AttendanceScreen() {
     );
   };
 
-  const handleClockOut = async () => {
-    if (!user) return;
-    
-    // Get the nearest work location
-    const detectedLocationId = await findNearestWorkLocation();
-    const locationName = detectedLocationId ? getLocationName(detectedLocationId) : 'No nearby location detected';
+  const handleClockOut = async (): Promise<void> => {
+    const location = await getCurrentLocation();
+    const detectedLocationId = location ? findNearestWorkLocation(location) : null;
     
     Alert.alert(
       'Clock Out',
-      `Are you sure you want to clock out?\n\nDetected Location: ${locationName}`,
+      detectedLocationId 
+        ? `Clock out from ${getLocationName(detectedLocationId)}?`
+        : 'Clock out from current location?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -199,15 +246,13 @@ export default function AttendanceScreen() {
           onPress: async () => {
             try {
               await recordAttendance({
-                workerId: user.id,
+                workerId: user!.id,
                 action: 'Clock Out',
                 dateTime: new Date().toISOString(),
                 workLocationId: detectedLocationId || undefined,
-                latitude: currentLocation?.coords.latitude,
-                longitude: currentLocation?.coords.longitude,
+                notes: '',
                 address: currentLocation ? `${currentLocation.coords.latitude.toFixed(6)}, ${currentLocation.coords.longitude.toFixed(6)}` : undefined
               });
-              Alert.alert('Success', `You have successfully clocked out${detectedLocationId ? ` from ${locationName}` : ''}!`);
             } catch (error) {
               Alert.alert('Error', 'Failed to clock out. Please try again.');
             }
@@ -217,34 +262,36 @@ export default function AttendanceScreen() {
     );
   };
 
-  const getUserTodayStatus = () => {
-    if (!user) return { isClockedIn: false, lastAction: null };
-    
+  const getUserTodayStatus = (): UserTodayStatus => {
     const userTodayRecords = todayAttendance
-      .filter(record => record.workerId === user.id)
+      .filter(record => record.workerId === user?.id)
       .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
-    
+
     const lastAction = userTodayRecords[0]?.action;
-    const isClockedIn = lastAction === 'Clock In';
-    
-    return { isClockedIn, lastAction };
+    return {
+      isClockedIn: lastAction === 'Clock In',
+      lastAction
+    };
   };
 
   const getTodayWorkerStats = () => {
-    const clockedInWorkers = new Set();
-    const workerStats: { [key: string]: { firstIn?: string; lastOut?: string; location?: string } } = {};
+    const clockedInWorkers = new Set<string>();
+    const workerStats: Record<string, WorkerStats> = {};
 
     todayAttendance.forEach(record => {
+      if (!workerStats[record.workerId]) {
+        workerStats[record.workerId] = {
+          location: record.workLocationId || '',
+        };
+      }
+
       if (record.action === 'Clock In') {
         clockedInWorkers.add(record.workerId);
-        if (!workerStats[record.workerId]?.firstIn) {
-          workerStats[record.workerId] = {
-            ...workerStats[record.workerId],
-            firstIn: record.dateTime,
-            location: record.workLocationId
-          };
+        if (!workerStats[record.workerId].firstIn) {
+          workerStats[record.workerId].firstIn = record.dateTime;
         }
       } else if (record.action === 'Clock Out') {
+        clockedInWorkers.delete(record.workerId);
         workerStats[record.workerId] = {
           ...workerStats[record.workerId],
           lastOut: record.dateTime
@@ -255,59 +302,115 @@ export default function AttendanceScreen() {
     return { clockedInWorkers: Array.from(clockedInWorkers), workerStats };
   };
 
-  const renderTodayView = () => {
-    // For workers and managers, show a simple clock in/out interface
-    if (isWorker || isManager) {
-      const { isClockedIn } = getUserTodayStatus();
-      const detectedLocationName = nearestWorkLocation ? getLocationName(nearestWorkLocation) : null;
-      
-      return (
-        <View style={styles.workerClockInterface}>
-          <View style={styles.clockCard}>
-            <Clock size={64} color="#2563eb" />
-            <Text style={styles.clockTitle}>Time Tracking</Text>
-            <Text style={styles.clockSubtitle}>
-              {isClockedIn ? 'You are currently clocked in' : 'Ready to start your day?'}
+  // ========================================
+  // RENDER COMPONENTS
+  // ========================================
+  
+  const renderWorkerClockInterface = () => {
+    const { isClockedIn } = getUserTodayStatus();
+    const detectedLocationName = nearestWorkLocation ? getLocationName(nearestWorkLocation) : null;
+    
+    return (
+      <View style={styles.workerClockInterface}>
+        <View style={styles.clockCard}>
+          <Clock size={64} color="#2563eb" />
+          <Text style={styles.clockTitle}>Time Tracking</Text>
+          <Text style={styles.clockSubtitle}>
+            {isClockedIn ? 'You are currently clocked in' : 'Ready to start your day?'}
+          </Text>
+          
+          <View style={styles.locationStatus}>
+            <MapPin size={16} color={nearestWorkLocation ? "#10b981" : "#6b7280"} />
+            <Text style={[styles.locationText, { color: nearestWorkLocation ? "#10b981" : "#6b7280" }]}>
+              {locationPermission 
+                ? (detectedLocationName || 'No nearby work location') 
+                : 'Location permission required'
+              }
             </Text>
+          </View>
+          
+          <View style={styles.clockButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.mainClockButton, styles.clockInButton, isClockedIn && styles.disabledButton]}
+              onPress={handleClockIn}
+              disabled={isClockedIn}
+              testID="main-clock-in-button"
+            >
+              <LogIn size={24} color="#ffffff" />
+              <Text style={styles.mainClockButtonText}>Clock In</Text>
+            </TouchableOpacity>
             
-            {/* Location Status */}
-            <View style={styles.locationStatus}>
-              <MapPin size={16} color={nearestWorkLocation ? "#10b981" : "#6b7280"} />
-              <Text style={[styles.locationText, { color: nearestWorkLocation ? "#10b981" : "#6b7280" }]}>
-                {locationPermission 
-                  ? (detectedLocationName || 'No nearby work location') 
-                  : 'Location permission required'
-                }
-              </Text>
-            </View>
-            
-            <View style={styles.clockButtonsContainer}>
-              <TouchableOpacity
-                style={[styles.mainClockButton, styles.clockInButton, isClockedIn && styles.disabledButton]}
-                onPress={handleClockIn}
-                disabled={isClockedIn}
-                testID="main-clock-in-button"
-              >
-                <LogIn size={24} color="#ffffff" />
-                <Text style={styles.mainClockButtonText}>Clock In</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.mainClockButton, styles.clockOutButton, !isClockedIn && styles.disabledButton]}
-                onPress={handleClockOut}
-                disabled={!isClockedIn}
-                testID="main-clock-out-button"
-              >
-                <LogOut size={24} color="#ffffff" />
-                <Text style={styles.mainClockButtonText}>Clock Out</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.mainClockButton, styles.clockOutButton, !isClockedIn && styles.disabledButton]}
+              onPress={handleClockOut}
+              disabled={!isClockedIn}
+              testID="main-clock-out-button"
+            >
+              <LogOut size={24} color="#ffffff" />
+              <Text style={styles.mainClockButtonText}>Clock Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      );
+      </View>
+    );
+  };
+
+  const renderWorkerAttendanceCard = (workerId: string, stats: WorkerStats) => {
+    const isStillClocked = !stats.lastOut;
+    
+    return (
+      <View key={workerId} style={styles.attendanceCard}>
+        <View style={styles.attendanceHeader}>
+          <View style={styles.workerInfo}>
+            <View style={styles.workerIcon}>
+              <User size={20} color="#2563eb" />
+            </View>
+            <View>
+              <Text style={styles.workerName}>{getWorkerName(workerId)}</Text>
+              <View style={styles.locationContainer}>
+                <MapPin size={12} color="#64748b" />
+                <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+                  {getLocationName(stats.location)}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={[
+            styles.statusBadge,
+            { backgroundColor: isStillClocked ? '#dcfce7' : '#f3f4f6' }
+          ]}>
+            <Text style={[
+              styles.statusText,
+              { color: isStillClocked ? '#166534' : '#6b7280' }
+            ]}>
+              {isStillClocked ? 'Active' : 'Clocked Out'}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.timeInfo}>
+          <View style={styles.timeItem}>
+            <Text style={styles.timeLabel}>First In</Text>
+            <Text style={styles.timeValue}>
+              {stats.firstIn ? formatTime(stats.firstIn) : '--'}
+            </Text>
+          </View>
+          <View style={styles.timeItem}>
+            <Text style={styles.timeLabel}>Last Out</Text>
+            <Text style={styles.timeValue}>
+              {stats.lastOut ? formatTime(stats.lastOut) : '--'}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderTodayView = () => {
+    if (isWorker || isManager) {
+      return renderWorkerClockInterface();
     }
 
-    // For managers and admins, show worker attendance overview
     const { clockedInWorkers, workerStats } = getTodayWorkerStats();
 
     if (clockedInWorkers.length === 0) {
@@ -324,60 +427,44 @@ export default function AttendanceScreen() {
 
     return (
       <View style={styles.attendanceList}>
-        {(clockedInWorkers as string[]).map((workerId: string) => {
-          const stats = workerStats[workerId];
-          const isStillClocked = !stats.lastOut;
-          
-          return (
-            <View key={workerId} style={styles.attendanceCard}>
-              <View style={styles.attendanceHeader}>
-                <View style={styles.workerInfo}>
-                  <View style={styles.workerIcon}>
-                    <User size={20} color="#2563eb" />
-                  </View>
-                  <View>
-                    <Text style={styles.workerName}>{getWorkerName(workerId as string)}</Text>
-                    <View style={styles.locationText}>
-                      <MapPin size={12} color="#64748b" />
-                      <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
-                        {getLocationName(stats.location)}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: isStillClocked ? '#dcfce7' : '#f3f4f6' }
-                ]}>
-                  <Text style={[
-                    styles.statusText,
-                    { color: isStillClocked ? '#166534' : '#6b7280' }
-                  ]}>
-                    {isStillClocked ? 'Active' : 'Clocked Out'}
-                  </Text>
-                </View>
-              </View>
-              
-              <View style={styles.timeInfo}>
-                <View style={styles.timeItem}>
-                  <Text style={styles.timeLabel}>First In</Text>
-                  <Text style={styles.timeValue}>
-                    {stats.firstIn ? formatTime(stats.firstIn) : '--'}
-                  </Text>
-                </View>
-                <View style={styles.timeItem}>
-                  <Text style={styles.timeLabel}>Last Out</Text>
-                  <Text style={styles.timeValue}>
-                    {stats.lastOut ? formatTime(stats.lastOut) : '--'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          );
-        })}
+        {clockedInWorkers.map((workerId: string) => 
+          renderWorkerAttendanceCard(workerId, workerStats[workerId])
+        )}
       </View>
     );
   };
+
+  const renderAttendanceRecord = (record: any) => (
+    <View key={record.id} style={styles.recordCard}>
+      <View style={styles.recordHeader}>
+        <View style={styles.recordInfo}>
+          <Text style={styles.workerName}>{getWorkerName(record.workerId)}</Text>
+          <Text style={styles.recordDate}>{formatDate(record.dateTime)}</Text>
+        </View>
+        <View style={[
+          styles.actionBadge,
+          { backgroundColor: record.action === 'Clock In' ? '#dcfce7' : '#fef3c7' }
+        ]}>
+          <Text style={[
+            styles.actionText,
+            { color: record.action === 'Clock In' ? '#166534' : '#92400e' }
+          ]}>
+            {record.action}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.recordDetails}>
+        <Text style={styles.recordTime}>{formatTime(record.dateTime)}</Text>
+        <View style={styles.recordLocation}>
+          <MapPin size={12} color="#64748b" />
+          <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+            {getLocationName(record.workLocationId)}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 
   const renderAllView = () => {
     const sortedAttendance = [...filteredAttendance].sort((a, b) => 
@@ -398,46 +485,38 @@ export default function AttendanceScreen() {
 
     return (
       <View style={styles.attendanceList}>
-        {sortedAttendance.map(record => (
-          <View key={record.id} style={styles.recordCard}>
-            <View style={styles.recordHeader}>
-              <View style={styles.recordInfo}>
-                <Text style={styles.workerName}>{getWorkerName(record.workerId)}</Text>
-                <Text style={styles.recordDate}>{formatDate(record.dateTime)}</Text>
-              </View>
-              <View style={[
-                styles.actionBadge,
-                { backgroundColor: record.action === 'Clock In' ? '#dcfce7' : '#fef3c7' }
-              ]}>
-                <Text style={[
-                  styles.actionText,
-                  { color: record.action === 'Clock In' ? '#166534' : '#92400e' }
-                ]}>
-                  {record.action}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.recordDetails}>
-              <Text style={styles.recordTime}>{formatTime(record.dateTime)}</Text>
-              <View style={styles.recordLocation}>
-                <MapPin size={12} color="#64748b" />
-                <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
-                  {getLocationName(record.workLocationId)}
-                </Text>
-              </View>
-            </View>
-          </View>
-        ))}
+        {sortedAttendance.map(renderAttendanceRecord)}
       </View>
     );
   };
 
+  // ========================================
+  // EFFECTS
+  // ========================================
+  
+  useEffect(() => {
+    const initializeLocation = async () => {
+      const hasPermission = await requestLocationPermission();
+      if (hasPermission) {
+        const location = await getCurrentLocation();
+        if (location) {
+          const nearest = findNearestWorkLocation(location);
+          setNearestWorkLocation(nearest);
+        }
+      }
+    };
+
+    initializeLocation();
+  }, []);
+
+  // ========================================
+  // MAIN RENDER
+  // ========================================
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Attendance</Text>
-        {/* Remove clock buttons from header for workers since they're now in the main interface */}
       </View>
 
       <View style={styles.tabContainer}>
@@ -474,7 +553,12 @@ export default function AttendanceScreen() {
   );
 }
 
+// ============================================================================
+// STYLES
+// ============================================================================
+
 const styles = StyleSheet.create({
+  // Layout Styles
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
@@ -484,11 +568,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
   },
+  scrollView: {
+    flex: 1,
+  },
+
+  // Typography Styles
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1e293b',
   },
+
+  // Clock Interface Styles
   workerClockInterface: {
     flex: 1,
     justifyContent: 'center',
@@ -501,10 +592,7 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
@@ -524,6 +612,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
+  locationStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    marginVertical: 16,
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  // Button Styles
   clockButtonsContainer: {
     flexDirection: 'row',
     gap: 16,
@@ -544,18 +649,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  clockActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  clockButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
   clockInButton: {
     backgroundColor: '#10b981',
   },
@@ -566,11 +659,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#9ca3af',
     opacity: 0.6,
   },
-  clockButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
+
+  // Tab Styles
   tabContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -599,14 +689,15 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#ffffff',
   },
-  scrollView: {
-    flex: 1,
-  },
+
+  // List Styles
   attendanceList: {
     paddingHorizontal: 20,
     paddingBottom: 20,
     gap: 12,
   },
+
+  // Card Styles
   attendanceCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
@@ -614,12 +705,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
+  recordCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+
+  // Header Styles
   attendanceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  // Worker Info Styles
   workerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -639,10 +747,13 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 2,
   },
-  locationText: {
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 2,
   },
+
+  // Badge Styles
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -652,6 +763,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
+  actionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  actionText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // Time Info Styles
   timeInfo: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -672,19 +794,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#374151',
   },
-  recordCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  recordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
+
+  // Record Styles
   recordInfo: {
     flex: 1,
   },
@@ -692,15 +803,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748b',
     marginTop: 2,
-  },
-  actionBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '500',
   },
   recordDetails: {
     flexDirection: 'row',
@@ -716,6 +818,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+
+  // Empty State Styles
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -735,20 +839,5 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 24,
-  },
-  locationStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
-    marginVertical: 16,
-  },
-  locationText: {
-    fontSize: 14,
-    fontWeight: '500',
   },
 });

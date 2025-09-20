@@ -71,7 +71,7 @@ function RootLayoutNav() {
         {canManageLocations && <Stack.Screen name="add-location" options={{ headerShown: false }} />}
         {canAssignTools && <Stack.Screen name="assign-tool" options={{ headerShown: false }} />}
         {canAccessTodoList && <Stack.Screen name="todo-list" options={{ headerShown: false }} />}
-        {canAddWorkers && <Stack.Screen name="add-worker" options={{ headerShown: false }} />}
+        {canAddWorkers && <Stack.Screen name="add-worker" options={{ headerShown: false, presentation: 'card' }} />}
         {canViewWorkers && <Stack.Screen name="workers" options={{ headerShown: false }} />}
         {canManageManagers && <Stack.Screen name="add-manager" options={{ headerShown: false }} />}
         {canManageManagers && <Stack.Screen name="managers" options={{ headerShown: false }} />}

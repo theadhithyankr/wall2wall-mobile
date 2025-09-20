@@ -1,3 +1,11 @@
+// TYPES & INTERFACES
+export type ToolCategory = typeof TOOL_CATEGORIES[number];
+export type WorkerSkill = typeof WORKER_SKILLS[number];
+export type ToolCondition = typeof TOOL_CONDITIONS[number];
+export type ToolStatus = typeof TOOL_STATUSES[number];
+export type OwnershipType = typeof OWNERSHIP_TYPES[number];
+
+// CONSTANTS
 export const TOOL_CATEGORIES = [
   'Drill',
   'Saw',

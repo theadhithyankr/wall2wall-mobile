@@ -1,7 +1,18 @@
-// template
 const tintColorLight = "#2f95dc";
 
-export default {
+export interface ColorTheme {
+  text: string;
+  background: string;
+  tint: string;
+  tabIconDefault: string;
+  tabIconSelected: string;
+}
+
+export interface Colors {
+  light: ColorTheme;
+}
+
+const Colors: Colors = {
   light: {
     text: "#000",
     background: "#fff",
@@ -10,3 +21,5 @@ export default {
     tabIconSelected: tintColorLight,
   },
 };
+
+export default Colors;
