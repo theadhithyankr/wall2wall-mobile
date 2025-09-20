@@ -337,9 +337,12 @@ export default function AttendanceScreen() {
                   </View>
                   <View>
                     <Text style={styles.workerName}>{getWorkerName(workerId as string)}</Text>
-                    <Text style={styles.locationText}>
-                      📍 {getLocationName(stats.location)}
-                    </Text>
+                    <View style={styles.locationText}>
+                      <MapPin size={12} color="#64748b" />
+                      <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+                        {getLocationName(stats.location)}
+                      </Text>
+                    </View>
                   </View>
                 </View>
                 <View style={[
@@ -417,9 +420,12 @@ export default function AttendanceScreen() {
             
             <View style={styles.recordDetails}>
               <Text style={styles.recordTime}>{formatTime(record.dateTime)}</Text>
-              <Text style={styles.recordLocation}>
-                📍 {getLocationName(record.workLocationId)}
-              </Text>
+              <View style={styles.recordLocation}>
+                <MapPin size={12} color="#64748b" />
+                <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+                  {getLocationName(record.workLocationId)}
+                </Text>
+              </View>
             </View>
           </View>
         ))}
@@ -634,8 +640,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   locationText: {
-    fontSize: 14,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -707,8 +713,8 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   recordLocation: {
-    fontSize: 14,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emptyState: {
     flex: 1,

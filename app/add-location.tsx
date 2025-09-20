@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, Check, MapPin, Navigation } from 'lucide-react-native';
+import { ArrowLeft, Check, MapPin, Navigation, Map } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
+import MapSelector from '@/components/MapSelector';
 
 export default function AddLocationScreen() {
   const { addLocation } = useData();
@@ -20,6 +21,7 @@ export default function AddLocationScreen() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [showMapSelector, setShowMapSelector] = useState(false);
 
   const getCurrentLocation = async () => {
     setIsGettingLocation(true);
@@ -46,6 +48,16 @@ export default function AddLocationScreen() {
     } finally {
       setIsGettingLocation(false);
     }
+  };
+
+  const handleMapLocationSelect = (latitude: number, longitude: number) => {
+    setFormData({
+      ...formData,
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6)
+    });
+    setShowMapSelector(false);
+    Alert.alert('Success', 'Location selected from map successfully');
   };
 
   const handleSubmit = async () => {
@@ -175,17 +187,27 @@ export default function AddLocationScreen() {
           <View style={styles.formGroup}>
             <View style={styles.labelRow}>
               <Text style={styles.label}>GPS Coordinates</Text>
-              <TouchableOpacity
-                style={[styles.locationButton, isGettingLocation && styles.locationButtonDisabled]}
-                onPress={getCurrentLocation}
-                disabled={isGettingLocation}
-                testID="get-location-button"
-              >
-                <Navigation size={16} color="#ffffff" />
-                <Text style={styles.locationButtonText}>
-                  {isGettingLocation ? 'Getting...' : 'Get Current'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.locationButton, styles.mapButton]}
+                  onPress={() => setShowMapSelector(true)}
+                  testID="map-selector-button"
+                >
+                  <Map size={16} color="#ffffff" />
+                  <Text style={styles.locationButtonText}>Select on Map</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.locationButton, isGettingLocation && styles.locationButtonDisabled]}
+                  onPress={getCurrentLocation}
+                  disabled={isGettingLocation}
+                  testID="get-location-button"
+                >
+                  <Navigation size={16} color="#ffffff" />
+                  <Text style={styles.locationButtonText}>
+                    {isGettingLocation ? 'Getting...' : 'Get Current'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
             
             <View style={styles.coordinateRow}>
@@ -220,6 +242,19 @@ export default function AddLocationScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showMapSelector}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <MapSelector
+          onLocationSelect={handleMapLocationSelect}
+          onCancel={() => setShowMapSelector(false)}
+          initialLatitude={formData.latitude ? parseFloat(formData.latitude) : undefined}
+          initialLongitude={formData.longitude ? parseFloat(formData.longitude) : undefined}
+        />
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -298,6 +333,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -306,6 +345,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     gap: 6,
+  },
+  mapButton: {
+    backgroundColor: '#10b981',
   },
   locationButtonDisabled: {
     backgroundColor: '#9ca3af',

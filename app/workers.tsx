@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, User, Phone, Clock } from 'lucide-react-native';
+import { Plus, User, Phone, Clock, MapPin } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function WorkersScreen() {
@@ -60,9 +60,12 @@ export default function WorkersScreen() {
         {worker.skill && (
           <Text style={styles.skillText}>🔧 {worker.skill}</Text>
         )}
-        <Text style={styles.locationText}>
-          📍 {getLocationName(worker.defaultLocationId)}
-        </Text>
+        <View style={styles.locationText}>
+          <MapPin size={12} color="#64748b" />
+          <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+            {getLocationName(worker.defaultLocationId)}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -231,8 +234,8 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   locationText: {
-    fontSize: 14,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emptyState: {
     flex: 1,

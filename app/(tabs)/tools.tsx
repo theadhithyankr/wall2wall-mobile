@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Search, Filter, Package, AlertCircle } from 'lucide-react-native';
+import { Plus, Search, Filter, Package, AlertCircle, MapPin } from 'lucide-react-native';
 import { Tool, ToolFilter } from '@/types';
 import { router } from 'expo-router';
 
@@ -103,9 +103,12 @@ export default function ToolsScreen() {
         </View>
         
         {tool.currentWorkLocationId && (
-          <Text style={styles.locationText}>
-            📍 {getLocationName(tool.currentWorkLocationId)}
-          </Text>
+          <View style={styles.locationText}>
+            <MapPin size={12} color="#64748b" />
+            <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+              {getLocationName(tool.currentWorkLocationId)}
+            </Text>
+          </View>
         )}
       </View>
     </TouchableOpacity>
@@ -357,8 +360,8 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   locationText: {
-    fontSize: 12,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emptyState: {
     flex: 1,

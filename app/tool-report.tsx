@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
-import { Download, Filter, Package, ArrowLeft, Calendar } from 'lucide-react-native';
+import { Download, Filter, Package, ArrowLeft, Calendar, MapPin } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function ToolReportScreen() {
@@ -244,9 +244,12 @@ export default function ToolReportScreen() {
                       <Text style={styles.statusText}>{tool.status}</Text>
                     </View>
                     
-                    <Text style={styles.locationText}>
-                      📍 {getLocationName(tool.currentWorkLocationId)}
-                    </Text>
+                    <View style={styles.locationText}>
+                      <MapPin size={12} color="#64748b" />
+                      <Text style={{ fontSize: 12, color: '#64748b', marginLeft: 4 }}>
+                        {getLocationName(tool.currentWorkLocationId)}
+                      </Text>
+                    </View>
                   </View>
 
                   {tool.ownershipType === 'Rented' && tool.expectedReturnDate && (
@@ -508,8 +511,8 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   locationText: {
-    fontSize: 12,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rentalInfo: {
     flexDirection: 'row',

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, Download, Filter, FileText, ArrowLeft } from 'lucide-react-native';
+import { Calendar, Download, Filter, FileText, ArrowLeft, MapPin } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AttendanceReportScreen() {
@@ -238,7 +238,12 @@ export default function AttendanceReportScreen() {
                     </View>
                   </View>
                   <Text style={styles.recordDateTime}>{formatDateTime(record.dateTime)}</Text>
-                  <Text style={styles.recordLocation}>📍 {getLocationName(record.workLocationId)}</Text>
+                  <View style={styles.recordLocation}>
+                    <MapPin size={12} color="#64748b" />
+                    <Text style={{ fontSize: 12, color: '#64748b', marginLeft: 4 }}>
+                      {getLocationName(record.workLocationId)}
+                    </Text>
+                  </View>
                   {record.notes && (
                     <Text style={styles.recordNotes}>{record.notes}</Text>
                   )}
@@ -440,8 +445,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   recordLocation: {
-    fontSize: 14,
-    color: '#64748b',
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
   recordNotes: {
