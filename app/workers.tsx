@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useData } from '@/contexts/DataContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/src/contexts/DataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { Plus, User, Phone, Clock, MapPin } from 'lucide-react-native';
 import { router } from 'expo-router';
 

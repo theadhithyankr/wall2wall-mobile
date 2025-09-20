@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
-import { useData } from '@/contexts/DataContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/src/contexts/DataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { Clock, User, Calendar, LogIn, LogOut, MapPin } from 'lucide-react-native';
 
 // ============================================================================

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/src/contexts/DataContext';
 import { ArrowLeft, Check, Camera, Image as ImageIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { TOOL_CATEGORIES, TOOL_CONDITIONS, OWNERSHIP_TYPES } from '@/constants/categories';
+import { TOOL_CATEGORIES, TOOL_CONDITIONS, OWNERSHIP_TYPES } from '@/src/utils/categories';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function AddToolScreen() {

@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { LayoutDashboard, Wrench, MapPin, Clock, MoreHorizontal, CheckSquare } from "lucide-react-native";
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function TabLayout() {
   const { user } = useAuth();

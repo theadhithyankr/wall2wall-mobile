@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/src/contexts/DataContext';
 import { Check } from 'lucide-react-native';
 import { router } from 'expo-router';
 

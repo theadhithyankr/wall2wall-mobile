@@ -7,12 +7,12 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { Stack, router } from 'expo-router';
-import { useData } from '@/contexts/DataContext';
-import { User } from '@/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useData } from '@/src/contexts/DataContext';
+import { User } from '@/src/types';
+import { ArrowLeft, Check } from 'lucide-react-native';
 
 export default function AddManagerScreen() {
   const { addManager } = useData();
@@ -21,7 +21,7 @@ export default function AddManagerScreen() {
     phone: '',
     email: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,38 +76,58 @@ export default function AddManagerScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
-    
-    setLoading(true);
-    
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim()) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      setLoading(true);
-      
-      await addManager({
+      const managerData: Omit<User, 'id'> = {
         name: formData.name.trim(),
-        phone: formData.phone.replace(/\s/g, ''),
-        isActive: true
-      });
-      
-      router.back();
+        phone: formData.phone.replace(/\s/g, ''), // Remove spaces from phone
+        email: formData.email.trim(),
+        role: 'manager',
+      };
+
+      await addManager(managerData);
+      Alert.alert('Success', 'Manager added successfully', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
     } catch (error) {
-      console.error('Error adding manager:', error);
       Alert.alert('Error', 'Failed to add manager. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <Stack.Screen options={{ title: 'Add Manager' }} />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={20} color="#64748b" />
+        </TouchableOpacity>
+        
+        <Text style={styles.title}>Add Manager</Text>
+        
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim() || isLoading) && styles.saveButtonDisabled
+          ]}
+          onPress={handleSubmit}
+          disabled={!formData.name.trim() || !formData.phone.trim() || !formData.email.trim() || isLoading}
+        >
+          <Check size={20} color="#ffffff" />
+        </TouchableOpacity>
+      </View>
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Manager Name *</Text>
             <TextInput
               style={styles.input}
@@ -119,7 +139,7 @@ export default function AddManagerScreen() {
             />
           </View>
 
-          <View style={styles.inputGroup}>
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Phone Number *</Text>
             <View style={styles.phoneContainer}>
               <Text style={styles.countryCode}>+91</Text>
@@ -135,7 +155,7 @@ export default function AddManagerScreen() {
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Email Address *</Text>
             <TextInput
               style={styles.input}
@@ -157,27 +177,7 @@ export default function AddManagerScreen() {
           </View>
         </View>
       </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.cancelButton]}
-          onPress={() => router.back()}
-          disabled={loading}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.button, styles.submitButton, loading && styles.disabledButton]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Adding...' : 'Add Manager'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -186,40 +186,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  saveButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2563eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
   scrollView: {
     flex: 1,
   },
   form: {
     padding: 20,
+    gap: 24,
   },
-  inputGroup: {
-    marginBottom: 20,
+  formGroup: {
+    gap: 8,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: '#374151',
-    marginBottom: 8,
   },
   input: {
+    height: 48,
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    color: '#111827',
   },
   phoneContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 48,
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
     backgroundColor: '#ffffff',
   },
   countryCode: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: '#6b7280',
@@ -228,7 +263,8 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 1,
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
     color: '#111827',
   },
@@ -238,7 +274,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: '#3b82f6',
-    marginTop: 10,
   },
   roleLabel: {
     fontSize: 16,
@@ -249,38 +284,5 @@ const styles = StyleSheet.create({
   roleDescription: {
     fontSize: 14,
     color: '#3730a3',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    padding: 20,
-    paddingTop: 10,
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  submitButton: {
-    backgroundColor: '#2563eb',
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  disabledButton: {
-    backgroundColor: '#9ca3af',
   },
 });

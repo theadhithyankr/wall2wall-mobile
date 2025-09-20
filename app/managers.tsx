@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Plus, Trash2, Mail, Phone, UserCheck } from 'lucide-react-native';
-import { useData } from '@/contexts/DataContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { User } from '@/types';
+import { useData } from '@/src/contexts/DataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { User } from '@/src/types';
 
 export default function ManagersScreen() {
   const { managers, deleteManager } = useData();

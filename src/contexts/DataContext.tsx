@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User } from '@/types';
+import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User } from '@/src/types';
 
 interface DataState {
   // Data

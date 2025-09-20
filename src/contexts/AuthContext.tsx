@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { User } from '@/types';
+import { User } from '@/src/types';
 
 interface AuthState {
   user: User | null;

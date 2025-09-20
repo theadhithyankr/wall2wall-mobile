@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Modal, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/src/contexts/DataContext';
 import { ArrowLeft, Check, MapPin, Navigation, Map, Camera, Image as ImageIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import MapSelector from '@/components/MapSelector';
+import MapSelector from '@/src/components/MapSelector';
 
 export default function AddLocationScreen() {
   const { addLocation } = useData();

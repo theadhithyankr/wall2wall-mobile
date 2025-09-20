@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/src/contexts/DataContext';
 import { MapPin, Phone, Wrench, Users, Edit, ArrowLeft } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
