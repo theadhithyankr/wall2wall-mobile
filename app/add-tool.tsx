@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, Check } from 'lucide-react-native';
+import { ArrowLeft, Check, Camera, Image as ImageIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { TOOL_CATEGORIES, TOOL_CONDITIONS, OWNERSHIP_TYPES } from '@/constants/categories';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function AddToolScreen() {
   const { addTool } = useData();
@@ -18,9 +19,51 @@ export default function AddToolScreen() {
     vendorContact: '',
     rentalStartDate: '',
     expectedReturnDate: '',
-    rentalCost: ''
+    rentalCost: '',
+    image: null as string | null
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setFormData({ ...formData, image: result.assets[0].uri });
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setFormData({ ...formData, image: result.assets[0].uri });
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image: null });
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -232,6 +275,41 @@ export default function AddToolScreen() {
               testID="notes-input"
             />
           </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Tool Image</Text>
+            {formData.image ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: formData.image }} style={styles.selectedImage} />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={removeImage}
+                  testID="remove-image-button"
+                >
+                  <Text style={styles.removeImageText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.imageUploadContainer}>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={takePhoto}
+                  testID="take-photo-button"
+                >
+                  <Camera size={24} color="#2563eb" />
+                  <Text style={styles.imageUploadText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickImage}
+                  testID="pick-image-button"
+                >
+                  <ImageIcon size={24} color="#2563eb" />
+                  <Text style={styles.imageUploadText}>Choose from Gallery</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -355,5 +433,49 @@ const styles = StyleSheet.create({
   },
   radioTextActive: {
     color: '#ffffff',
+  },
+  imageContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectedImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+  },
+  removeImageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#ef4444',
+    borderRadius: 6,
+  },
+  removeImageText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  imageUploadContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  imageUploadButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#2563eb',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+  },
+  imageUploadText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#2563eb',
   },
 });

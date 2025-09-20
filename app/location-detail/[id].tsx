@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
 import { MapPin, Phone, Wrench, Users, Edit, ArrowLeft } from 'lucide-react-native';
+import { Image } from 'expo-image';
 
 export default function LocationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,7 +49,7 @@ export default function LocationDetailScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity onPress={() => router.push(`/edit-location/${location.id}` as any)}>
               <Edit size={24} color="#2563eb" />
             </TouchableOpacity>
           )
@@ -141,6 +142,19 @@ export default function LocationDetailScreen() {
             <Text style={styles.sectionTitle}>Notes</Text>
             <View style={styles.notesCard}>
               <Text style={styles.notesText}>{location.notes}</Text>
+            </View>
+          </View>
+        )}
+
+        {location.image && (
+          <View style={styles.imageSection}>
+            <Text style={styles.sectionTitle}>Location Image</Text>
+            <View style={styles.imageCard}>
+              <Image 
+                source={{ uri: location.image }} 
+                style={styles.locationImage}
+                contentFit="cover"
+              />
             </View>
           </View>
         )}
@@ -345,5 +359,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
     lineHeight: 20,
+  },
+  imageSection: {
+    padding: 20,
+  },
+  imageCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  locationImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
 });

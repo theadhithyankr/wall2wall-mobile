@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Modal, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, Check, MapPin, Navigation, Map } from 'lucide-react-native';
+import { ArrowLeft, Check, MapPin, Navigation, Map, Camera, Image as ImageIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 import MapSelector from '@/components/MapSelector';
 
 export default function AddLocationScreen() {
@@ -17,11 +18,53 @@ export default function AddLocationScreen() {
     contactPhone: '',
     notes: '',
     latitude: '',
-    longitude: ''
+    longitude: '',
+    image: null as string | null
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [showMapSelector, setShowMapSelector] = useState(false);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setFormData({ ...formData, image: result.assets[0].uri });
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setFormData({ ...formData, image: result.assets[0].uri });
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, image: null });
+  };
 
   const getCurrentLocation = async () => {
     setIsGettingLocation(true);
@@ -185,36 +228,41 @@ export default function AddLocationScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>GPS Coordinates</Text>
-              <View style={styles.buttonRow}>
-                <TouchableOpacity
-                  style={[styles.locationButton, styles.mapButton]}
-                  onPress={() => setShowMapSelector(true)}
-                  testID="map-selector-button"
-                >
-                  <Map size={16} color="#ffffff" />
-                  <Text style={styles.locationButtonText}>Select on Map</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.locationButton, isGettingLocation && styles.locationButtonDisabled]}
-                  onPress={getCurrentLocation}
-                  disabled={isGettingLocation}
-                  testID="get-location-button"
-                >
-                  <Navigation size={16} color="#ffffff" />
-                  <Text style={styles.locationButtonText}>
-                    {isGettingLocation ? 'Getting...' : 'Get Current'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+            <Text style={styles.label}>GPS Coordinates</Text>
+           
+            
+            <View style={styles.gpsButtonContainer}>
+              <TouchableOpacity
+                style={[styles.gpsButton, styles.mapButton]}
+                onPress={() => setShowMapSelector(true)}
+                testID="map-selector-button"
+              >
+                <View style={styles.buttonIconContainer}>
+                  <Map size={20} color="#ffffff" />
+                </View>
+                <Text style={styles.gpsButtonText}>Select on Map</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.gpsButton, styles.currentLocationButton, isGettingLocation && styles.gpsButtonDisabled]}
+                onPress={getCurrentLocation}
+                disabled={isGettingLocation}
+                testID="get-location-button"
+              >
+                <View style={styles.buttonIconContainer}>
+                  <Navigation size={20} color="#ffffff" />
+                </View>
+                <Text style={styles.gpsButtonText}>
+                  {isGettingLocation ? 'Getting...' : 'Get Current'}
+                </Text>
+              </TouchableOpacity>
             </View>
             
-            <View style={styles.coordinateRow}>
-              <View style={styles.coordinateInput}>
+            <View style={styles.coordinatesContainer}>
+              <View style={styles.coordinateInputGroup}>
                 <Text style={styles.coordinateLabel}>Latitude</Text>
                 <TextInput
-                  style={styles.input}
+                  style={styles.coordinateInput}
                   value={formData.latitude}
                   onChangeText={(text) => setFormData({ ...formData, latitude: text })}
                   placeholder="19.0760"
@@ -223,10 +271,10 @@ export default function AddLocationScreen() {
                 />
               </View>
               
-              <View style={styles.coordinateInput}>
+              <View style={styles.coordinateInputGroup}>
                 <Text style={styles.coordinateLabel}>Longitude</Text>
                 <TextInput
-                  style={styles.input}
+                  style={styles.coordinateInput}
                   value={formData.longitude}
                   onChangeText={(text) => setFormData({ ...formData, longitude: text })}
                   placeholder="72.8777"
@@ -235,10 +283,41 @@ export default function AddLocationScreen() {
                 />
               </View>
             </View>
-            
-            <Text style={styles.coordinateHint}>
-              GPS coordinates help workers automatically detect this location when clocking in/out
-            </Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Location Image</Text>
+            {formData.image ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: formData.image }} style={styles.selectedImage} />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={removeImage}
+                  testID="remove-image-button"
+                >
+                  <Text style={styles.removeImageText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.imageUploadContainer}>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={takePhoto}
+                  testID="take-photo-button"
+                >
+                  <Camera size={24} color="#2563eb" />
+                  <Text style={styles.imageUploadText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.imageUploadButton}
+                  onPress={pickImage}
+                  testID="pick-image-button"
+                >
+                  <ImageIcon size={24} color="#2563eb" />
+                  <Text style={styles.imageUploadText}>Choose from Gallery</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -337,6 +416,62 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  gpsButtonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginVertical: 16,
+  },
+  gpsButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2563eb',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  buttonIconContainer: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gpsButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  mapButton: {
+    backgroundColor: '#10b981',
+  },
+  currentLocationButton: {
+    backgroundColor: '#2563eb',
+  },
+  gpsButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  coordinateInputGroup: {
+    flex: 1,
+    gap: 6,
+  },
+  coordinateInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    textAlign: 'center',
+  },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -345,9 +480,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     gap: 6,
-  },
-  mapButton: {
-    backgroundColor: '#10b981',
   },
   locationButtonDisabled: {
     backgroundColor: '#9ca3af',
@@ -362,19 +494,60 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 8,
   },
-  coordinateInput: {
-    flex: 1,
-    gap: 4,
-  },
   coordinateLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#64748b',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 2,
   },
   coordinateHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#64748b',
-    fontStyle: 'italic',
-    lineHeight: 16,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  selectedImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+  },
+  removeImageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#ef4444',
+    borderRadius: 6,
+  },
+  removeImageText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  imageUploadContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  imageUploadButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#2563eb',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+  },
+  imageUploadText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#2563eb',
   },
 });

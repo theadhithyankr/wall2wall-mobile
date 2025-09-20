@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
 import { Package, MapPin, Calendar, AlertCircle, Edit, ArrowLeft, UserMinus } from 'lucide-react-native';
+import { Image } from 'expo-image';
 
 export default function ToolDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,7 +67,7 @@ export default function ToolDetailScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity onPress={() => router.push(`/edit-tool/${tool.id}` as any)}>
               <Edit size={24} color="#2563eb" />
             </TouchableOpacity>
           )
@@ -213,6 +214,19 @@ export default function ToolDetailScreen() {
             <Text style={styles.sectionTitle}>Notes</Text>
             <View style={styles.notesCard}>
               <Text style={styles.notesText}>{tool.notes}</Text>
+            </View>
+          </View>
+        )}
+
+        {tool.image && (
+          <View style={styles.imageSection}>
+            <Text style={styles.sectionTitle}>Tool Image</Text>
+            <View style={styles.imageCard}>
+              <Image 
+                source={{ uri: tool.image }} 
+                style={styles.toolImage}
+                contentFit="cover"
+              />
             </View>
           </View>
         )}
@@ -487,5 +501,20 @@ const styles = StyleSheet.create({
   },
   returnButtonText: {
     color: '#ffffff',
+  },
+  imageSection: {
+    padding: 20,
+  },
+  imageCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  toolImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
 });

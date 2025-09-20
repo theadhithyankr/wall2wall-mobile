@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Filter, Package, AlertCircle, MapPin } from 'lucide-react-native';
 import { Tool, ToolFilter } from '@/types';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
 
 export default function ToolsScreen() {
   const { tools, locations } = useData();
@@ -68,6 +69,13 @@ export default function ToolsScreen() {
       testID={`tool-card-${tool.id}`}
     >
       <View style={styles.toolHeader}>
+        {tool.image && (
+          <Image 
+            source={{ uri: tool.image }} 
+            style={styles.toolImage}
+            contentFit="cover"
+          />
+        )}
         <View style={styles.toolInfo}>
           <Text style={styles.toolName}>{tool.name}</Text>
           <Text style={styles.toolCategory}>{tool.category}</Text>
@@ -105,7 +113,7 @@ export default function ToolsScreen() {
         {tool.currentWorkLocationId && (
           <View style={styles.locationText}>
             <MapPin size={12} color="#64748b" />
-            <Text style={{ fontSize: 14, color: '#64748b', marginLeft: 4 }}>
+            <Text style={styles.locationTextContent}>
               {getLocationName(tool.currentWorkLocationId)}
             </Text>
           </View>
@@ -299,6 +307,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
+    gap: 12,
+  },
+  toolImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
   },
   toolInfo: {
     flex: 1,
@@ -362,6 +376,11 @@ const styles = StyleSheet.create({
   locationText: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  locationTextContent: {
+    fontSize: 14,
+    color: '#64748b',
+    marginLeft: 4,
   },
   emptyState: {
     flex: 1,

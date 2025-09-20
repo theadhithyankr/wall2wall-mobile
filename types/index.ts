@@ -8,6 +8,7 @@ export interface Tool {
   condition: 'Good' | 'Needs Service' | 'Damaged';
   notes?: string;
   photos?: string[];
+  image?: string;
   
   // Rental specific fields
   vendorName?: string;
@@ -32,6 +33,7 @@ export interface WorkLocation {
   notes?: string;
   latitude?: number;
   longitude?: number;
+  image?: string;
   createdAt: string;
   updatedAt: string;
 }

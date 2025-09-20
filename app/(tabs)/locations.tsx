@@ -5,6 +5,7 @@ import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, MapPin, Phone, Wrench, Users } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { Image } from 'expo-image';
 
 export default function LocationsScreen() {
   const { locations, tools, attendance } = useData();
@@ -52,6 +53,13 @@ export default function LocationsScreen() {
         testID={`location-card-${location.id}`}
       >
         <View style={styles.locationHeader}>
+          {location.image && (
+            <Image
+              source={{ uri: location.image }}
+              style={styles.locationImage}
+              contentFit="cover"
+            />
+          )}
           <View style={styles.locationIcon}>
             <MapPin size={20} color="#2563eb" />
           </View>
@@ -209,6 +217,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
     gap: 12,
+  },
+  locationImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
   },
   locationIcon: {
     width: 40,
