@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Search, Filter, Package, AlertCircle, MapPin } from 'lucide-react-native';
+import { Plus, Search, Filter, Package, AlertCircle, MapPin, Edit } from 'lucide-react-native';
 import { Tool, ToolFilter } from '@/types';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -80,23 +80,36 @@ export default function ToolsScreen() {
           <Text style={styles.toolName}>{tool.name}</Text>
           <Text style={styles.toolCategory}>{tool.category}</Text>
         </View>
-        <View style={styles.badges}>
-          <View style={[
-            styles.ownershipBadge,
-            { backgroundColor: tool.ownershipType === 'Rented' ? '#fef3c7' : '#dbeafe' }
-          ]}>
-            <Text style={[
-              styles.ownershipText,
-              { color: tool.ownershipType === 'Rented' ? '#92400e' : '#1e40af' }
+        <View style={styles.headerActions}>
+          <View style={styles.badges}>
+            <View style={[
+              styles.ownershipBadge,
+              { backgroundColor: tool.ownershipType === 'Rented' ? '#fef3c7' : '#dbeafe' }
             ]}>
-              {tool.ownershipType}
-            </Text>
-          </View>
-          {isOverdue(tool) && (
-            <View style={styles.overdueBadge}>
-              <AlertCircle size={12} color="#dc2626" />
-              <Text style={styles.overdueText}>Overdue</Text>
+              <Text style={[
+                styles.ownershipText,
+                { color: tool.ownershipType === 'Rented' ? '#92400e' : '#1e40af' }
+              ]}>
+                {tool.ownershipType}
+              </Text>
             </View>
+            {isOverdue(tool) && (
+              <View style={styles.overdueBadge}>
+                <AlertCircle size={12} color="#dc2626" />
+                <Text style={styles.overdueText}>Overdue</Text>
+              </View>
+            )}
+          </View>
+          {canEditTools && (
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                router.push(`/edit-tool/${tool.id}` as any);
+              }}
+            >
+              <Edit size={16} color="#2563eb" />
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -308,6 +321,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
     gap: 12,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
   },
   toolImage: {
     width: 60,

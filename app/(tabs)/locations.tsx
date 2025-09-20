@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Search, MapPin, Phone, Wrench, Users } from 'lucide-react-native';
+import { Plus, Search, MapPin, Phone, Wrench, Users, Edit } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 
@@ -54,12 +54,12 @@ export default function LocationsScreen() {
       >
         <View style={styles.locationHeader}>
           {location.image && (
-            <Image
-              source={{ uri: location.image }}
-              style={styles.locationImage}
-              contentFit="cover"
-            />
-          )}
+          <Image 
+            source={{ uri: location.image }} 
+            style={styles.locationImage}
+            contentFit="cover"
+          />
+        )}
           <View style={styles.locationIcon}>
             <MapPin size={20} color="#2563eb" />
           </View>
@@ -67,6 +67,17 @@ export default function LocationsScreen() {
             <Text style={styles.locationName}>{location.name}</Text>
             <Text style={styles.locationAddress}>{location.address}, {location.city}</Text>
           </View>
+          {canEditLocations && (
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                router.push(`/edit-location/${location.id}` as any);
+              }}
+            >
+              <Edit size={16} color="#2563eb" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {location.contactPerson && (
@@ -214,9 +225,15 @@ const styles = StyleSheet.create({
   },
   locationHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
     gap: 12,
+  },
+  editButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    marginLeft: 'auto',
   },
   locationImage: {
     width: 60,
