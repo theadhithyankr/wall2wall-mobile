@@ -81,6 +81,22 @@ export default function LocationDetailScreen() {
           </View>
         )}
 
+        {(location.latitude || location.longitude) && (
+          <View style={styles.coordinatesSection}>
+            <Text style={styles.sectionTitle}>GPS Coordinates</Text>
+            <View style={styles.coordinatesCard}>
+              <View style={styles.coordinateRow}>
+                <Text style={styles.coordinateLabel}>Latitude:</Text>
+                <Text style={styles.coordinateValue}>{location.latitude || 'Not set'}</Text>
+              </View>
+              <View style={styles.coordinateRow}>
+                <Text style={styles.coordinateLabel}>Longitude:</Text>
+                <Text style={styles.coordinateValue}>{location.longitude || 'Not set'}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         <View style={styles.statsSection}>
           <Text style={styles.sectionTitle}>Overview</Text>
           <View style={styles.statsGrid}>
@@ -288,6 +304,32 @@ const styles = StyleSheet.create({
   toolCategory: {
     fontSize: 12,
     color: '#64748b',
+  },
+  coordinatesSection: {
+    padding: 20,
+  },
+  coordinatesCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 12,
+  },
+  coordinateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  coordinateLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  coordinateValue: {
+    fontSize: 14,
+    color: '#1e293b',
+    fontFamily: 'monospace',
   },
   notesSection: {
     padding: 20,

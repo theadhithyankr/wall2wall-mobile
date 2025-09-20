@@ -99,6 +99,8 @@ export const [DataProvider, useData] = createContextHook(() => {
         city: 'Mumbai',
         contactPerson: 'Rajesh Kumar',
         contactPhone: '+91 98765 43210',
+        latitude: 19.0760,
+        longitude: 72.8777,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
@@ -109,6 +111,8 @@ export const [DataProvider, useData] = createContextHook(() => {
         city: 'Pune',
         contactPerson: 'Priya Sharma',
         contactPhone: '+91 87654 32109',
+        latitude: 18.5204,
+        longitude: 73.8567,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }

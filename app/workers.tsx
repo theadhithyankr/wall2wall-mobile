@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, User, Phone } from 'lucide-react-native';
+import { Plus, User, Phone, Clock } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function WorkersScreen() {
@@ -71,15 +71,25 @@ export default function WorkersScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Workers</Text>
-        {canAddWorkers && (
+        <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push('/add-worker')}
-            testID="add-worker-button"
+            style={styles.attendanceButton}
+            onPress={() => router.push('/(tabs)/attendance')}
+            testID="quick-attendance-button"
           >
-            <Plus size={24} color="#ffffff" />
+            <Clock size={20} color="#ffffff" />
+            <Text style={styles.attendanceButtonText}>Attendance</Text>
           </TouchableOpacity>
-        )}
+          {canAddWorkers && (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => router.push('/add-worker')}
+              testID="add-worker-button"
+            >
+              <Plus size={24} color="#ffffff" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -129,6 +139,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1e293b',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  attendanceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10b981',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 8,
+  },
+  attendanceButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   addButton: {
     width: 40,

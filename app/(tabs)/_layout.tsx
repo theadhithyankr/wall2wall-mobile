@@ -32,25 +32,25 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} />,
         }}
       />
-      {!isWorker && <Tabs.Screen
-            name="tools"
-            options={{
-              title: "Tools",
-              tabBarIcon: ({ color, size }) => <Wrench color={color} size={size} />,
-            }}
-          />}
-      {!isWorker && <Tabs.Screen
-            name="locations"
-            options={{
-              title: "Locations",
-              tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
-            }}
-          />}
       <Tabs.Screen
         name="attendance"
         options={{
           title: "Attendance",
           tabBarIcon: ({ color, size }) => <Clock color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="tools"
+        options={{
+          title: "Tools",
+          tabBarIcon: ({ color, size }) => <Wrench color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="locations"
+        options={{
+          title: "Locations",
+          tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
         }}
       />
       <Tabs.Screen

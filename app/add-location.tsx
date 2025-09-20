@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
-import { ArrowLeft, Check } from 'lucide-react-native';
+import { ArrowLeft, Check, MapPin, Navigation } from 'lucide-react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 
 export default function AddLocationScreen() {
   const { addLocation } = useData();
@@ -13,9 +14,39 @@ export default function AddLocationScreen() {
     city: '',
     contactPerson: '',
     contactPhone: '',
-    notes: ''
+    notes: '',
+    latitude: '',
+    longitude: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  const getCurrentLocation = async () => {
+    setIsGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to get current coordinates');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      setFormData({
+        ...formData,
+        latitude: location.coords.latitude.toFixed(6),
+        longitude: location.coords.longitude.toFixed(6)
+      });
+
+      Alert.alert('Success', 'Current location coordinates captured successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to get current location. Please try again.');
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.city.trim()) {
@@ -31,7 +62,9 @@ export default function AddLocationScreen() {
         city: formData.city.trim(),
         contactPerson: formData.contactPerson.trim() || undefined,
         contactPhone: formData.contactPhone.trim() || undefined,
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined
       };
 
       await addLocation(locationData);
@@ -138,6 +171,53 @@ export default function AddLocationScreen() {
               testID="notes-input"
             />
           </View>
+
+          <View style={styles.formGroup}>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>GPS Coordinates</Text>
+              <TouchableOpacity
+                style={[styles.locationButton, isGettingLocation && styles.locationButtonDisabled]}
+                onPress={getCurrentLocation}
+                disabled={isGettingLocation}
+                testID="get-location-button"
+              >
+                <Navigation size={16} color="#ffffff" />
+                <Text style={styles.locationButtonText}>
+                  {isGettingLocation ? 'Getting...' : 'Get Current'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.coordinateRow}>
+              <View style={styles.coordinateInput}>
+                <Text style={styles.coordinateLabel}>Latitude</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.latitude}
+                  onChangeText={(text) => setFormData({ ...formData, latitude: text })}
+                  placeholder="19.0760"
+                  keyboardType="numeric"
+                  testID="latitude-input"
+                />
+              </View>
+              
+              <View style={styles.coordinateInput}>
+                <Text style={styles.coordinateLabel}>Longitude</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.longitude}
+                  onChangeText={(text) => setFormData({ ...formData, longitude: text })}
+                  placeholder="72.8777"
+                  keyboardType="numeric"
+                  testID="longitude-input"
+                />
+              </View>
+            </View>
+            
+            <Text style={styles.coordinateHint}>
+              GPS coordinates help workers automatically detect this location when clocking in/out
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -211,5 +291,48 @@ const styles = StyleSheet.create({
     height: 96,
     paddingTop: 12,
     textAlignVertical: 'top',
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    gap: 6,
+  },
+  locationButtonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  locationButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  coordinateRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  coordinateInput: {
+    flex: 1,
+    gap: 4,
+  },
+  coordinateLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748b',
+  },
+  coordinateHint: {
+    fontSize: 12,
+    color: '#64748b',
+    fontStyle: 'italic',
+    lineHeight: 16,
   },
 });
