@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 
 export default function MoreScreen() {
   const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'Admin';
 
   const menuSections = [
     {
@@ -28,6 +29,13 @@ export default function MoreScreen() {
           onPress: () => router.push('/workers'),
           testId: 'workers-menu'
         },
+        ...(isAdmin ? [{
+          title: 'Managers',
+          subtitle: 'Manage manager accounts',
+          icon: User,
+          onPress: () => router.push('/managers'),
+          testId: 'managers-menu'
+        }] : []),
         {
           title: 'Assign Tool',
           subtitle: 'Quick tool assignment',

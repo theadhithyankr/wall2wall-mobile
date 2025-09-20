@@ -1,13 +1,14 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats } from '@/types';
+import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User } from '@/types';
 
 interface DataState {
   // Data
   tools: Tool[];
   locations: WorkLocation[];
   workers: Worker[];
+  managers: User[];
   assignments: Assignment[];
   attendance: AttendanceRecord[];
   
@@ -29,6 +30,11 @@ interface DataState {
   updateWorker: (id: string, updates: Partial<Worker>) => Promise<void>;
   deleteWorker: (id: string) => Promise<void>;
   
+  // Managers
+  addManager: (manager: Omit<User, 'id' | 'createdAt' | 'role'>) => Promise<void>;
+  updateManager: (id: string, updates: Partial<User>) => Promise<void>;
+  deleteManager: (id: string) => Promise<void>;
+  
   // Assignments
   assignTool: (toolId: string, locationId: string, notes?: string, expectedReturn?: string) => Promise<void>;
   unassignTool: (toolId: string) => Promise<void>;
@@ -46,6 +52,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [locations, setLocations] = useState<WorkLocation[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [managers, setManagers] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,10 +63,11 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   const loadData = async () => {
     try {
-      const [toolsData, locationsData, workersData, assignmentsData, attendanceData] = await Promise.all([
+      const [toolsData, locationsData, workersData, managersData, assignmentsData, attendanceData] = await Promise.all([
         AsyncStorage.getItem('tools'),
         AsyncStorage.getItem('locations'),
         AsyncStorage.getItem('workers'),
+        AsyncStorage.getItem('managers'),
         AsyncStorage.getItem('assignments'),
         AsyncStorage.getItem('attendance')
       ]);
@@ -67,6 +75,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       if (toolsData) setTools(JSON.parse(toolsData));
       if (locationsData) setLocations(JSON.parse(locationsData));
       if (workersData) setWorkers(JSON.parse(workersData));
+      if (managersData) setManagers(JSON.parse(managersData));
       if (assignmentsData) setAssignments(JSON.parse(assignmentsData));
       if (attendanceData) setAttendance(JSON.parse(attendanceData));
       
@@ -258,6 +267,33 @@ export const [DataProvider, useData] = createContextHook(() => {
     await saveData('workers', updatedWorkers);
   };
 
+  // Manager operations
+  const addManager = async (managerData: Omit<User, 'id' | 'createdAt' | 'role'>) => {
+    const newManager: User = {
+      ...managerData,
+      id: generateId(),
+      role: 'Manager',
+      createdAt: new Date().toISOString()
+    };
+    const updatedManagers = [...managers, newManager];
+    setManagers(updatedManagers);
+    await saveData('managers', updatedManagers);
+  };
+
+  const updateManager = async (id: string, updates: Partial<User>) => {
+    const updatedManagers = managers.map(manager => 
+      manager.id === id ? { ...manager, ...updates } : manager
+    );
+    setManagers(updatedManagers);
+    await saveData('managers', updatedManagers);
+  };
+
+  const deleteManager = async (id: string) => {
+    const updatedManagers = managers.filter(manager => manager.id !== id);
+    setManagers(updatedManagers);
+    await saveData('managers', updatedManagers);
+  };
+
   // Assignment operations
   const assignTool = async (toolId: string, locationId: string, notes?: string, expectedReturn?: string) => {
     const assignment: Assignment = {
@@ -343,6 +379,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     tools,
     locations,
     workers,
+    managers,
     assignments,
     attendance,
     isLoading,
@@ -355,6 +392,9 @@ export const [DataProvider, useData] = createContextHook(() => {
     addWorker,
     updateWorker,
     deleteWorker,
+    addManager,
+    updateManager,
+    deleteManager,
     assignTool,
     unassignTool,
     recordAttendance,

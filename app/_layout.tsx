@@ -42,6 +42,8 @@ function RootLayoutNav() {
       {canManageTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
       {canManageUsers && <Stack.Screen name="add-worker" options={{ title: "Add Worker" }} />}
       {canManageUsers && <Stack.Screen name="workers" options={{ title: "Workers" }} />}
+      {canManageUsers && <Stack.Screen name="add-manager" options={{ title: "Add Manager" }} />}
+      {canManageUsers && <Stack.Screen name="managers" options={{ title: "Managers" }} />}
       <Stack.Screen name="location-detail/[id]" options={{ title: "Location Details" }} />
       <Stack.Screen name="tool-detail/[id]" options={{ title: "Tool Details" }} />
       {canViewReports && <Stack.Screen name="attendance-report" options={{ title: "Attendance Report" }} />}
