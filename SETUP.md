@@ -1,12 +1,15 @@
 # Wall2Wall App Setup Guide
 
+## Repository
+- **GitHub Repository**: https://github.com/theadhithyankr/Wall2Wall.git
+
 ## Prerequisites
 
 Before running this app, make sure you have the following installed on your system:
 
 ### Required Software
 - **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** or **Bun** package manager
+- **npm** package manager (comes with Node.js)
 - **Git** - [Download here](https://git-scm.com/)
 
 ### For Mobile Development
@@ -26,34 +29,22 @@ Before running this app, make sure you have the following installed on your syst
 
 ### 1. Clone the Repository
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/theadhithyankr/Wall2Wall.git
 cd Wall2Wall
 ```
 
 ### 2. Install Dependencies
-Choose one of the following package managers:
-
-**Using npm:**
 ```bash
 npm install
-```
-
-**Using Bun (recommended):**
-```bash
-bun install
 ```
 
 ### 3. Start the Development Server
 ```bash
 # Start Expo development server
 npm start
-# or
-bun start
 
 # For web development
 npm run start-web
-# or
-bun run start-web
 ```
 
 ### 4. Run on Different Platforms
@@ -70,11 +61,11 @@ After starting the development server, you can:
 
 **iOS Simulator (Mac only):**
 - Press `i` in the terminal
-- Or run: `npm run ios` / `bun run ios`
+- Or run: `npm run ios`
 
 **Android Emulator:**
 - Press `a` in the terminal
-- Or run: `npm run android` / `bun run android`
+- Or run: `npm run android`
 
 ## Project Structure
 
@@ -131,15 +122,13 @@ The app requires location permissions. Make sure to:
 **Metro bundler cache issues:**
 ```bash
 npm start -- --clear
-# or
-bun start --clear
 ```
 
 **Node modules issues:**
 ```bash
 rm -rf node_modules
-rm package-lock.json  # or bun.lockb
-npm install  # or bun install
+rm package-lock.json
+npm install
 ```
 
 **Expo CLI issues:**
@@ -168,18 +157,18 @@ npm install -g @expo/cli@latest
 
 ```bash
 # Start development server
-npm start / bun start
+npm start
 
 # Start with cache cleared
-npm start -- --clear / bun start --clear
+npm start -- --clear
 
 # Run on specific platforms
-npm run ios / bun run ios
-npm run android / bun run android
-npm run start-web / bun run start-web
+npm run ios
+npm run android
+npm run start-web
 
 # Lint code
-npm run lint / bun run lint
+npm run lint
 
 # Type checking
 npx tsc --noEmit
@@ -205,7 +194,7 @@ eas build --platform android
 ### Local Build
 ```bash
 # For web
-npm run build-web / bun run build-web
+npm run build-web
 
 # For native platforms, use EAS Build or Expo Application Services
 ```
