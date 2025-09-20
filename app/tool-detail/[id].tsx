@@ -3,14 +3,23 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useData } from '@/src/contexts/DataContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { Package, MapPin, Calendar, AlertCircle, Edit, ArrowLeft, UserMinus } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
 export default function ToolDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { tools, locations, unassignTool } = useData();
+  const { user } = useAuth();
   
   const tool = tools.find(t => t.id === id);
+  
+  // Role-based permissions
+  const isManager = user?.role === 'Manager';
+  const isAdmin = user?.role === 'Admin';
+  const isWorker = user?.role === 'Worker';
+  const canAssignTools = isManager || isAdmin || isWorker; // All roles can assign tools
+  const canEditTools = isManager || isAdmin; // Only managers and admins can edit tools
   
   if (!tool) {
     return (
@@ -67,9 +76,11 @@ export default function ToolDetailScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.push(`/edit-tool/${tool.id}` as any)}>
-              <Edit size={24} color="#2563eb" />
-            </TouchableOpacity>
+            canEditTools && (
+              <TouchableOpacity onPress={() => router.push(`/edit-tool/${tool.id}` as any)}>
+                <Edit size={24} color="#2563eb" />
+              </TouchableOpacity>
+            )
           )
         }} 
       />
@@ -114,7 +125,7 @@ export default function ToolDetailScreen() {
               ]} />
               <Text style={styles.statusText}>{tool.status}</Text>
             </View>
-            {tool.status === 'Available' && (
+            {tool.status === 'Available' && canAssignTools && (
               <TouchableOpacity 
                 style={styles.assignButton}
                 onPress={() => router.push('/assign-tool')}
@@ -122,7 +133,7 @@ export default function ToolDetailScreen() {
                 <Text style={styles.assignButtonText}>Assign to Location</Text>
               </TouchableOpacity>
             )}
-            {tool.status === 'Assigned' && (
+            {tool.status === 'Assigned' && canAssignTools && (
               <TouchableOpacity 
                 style={styles.unassignButton}
                 onPress={() => handleUnassign()}

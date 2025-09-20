@@ -7,10 +7,11 @@ import { Plus, Wrench, MapPin, Users, AlertTriangle, Clock, CheckSquare, UserChe
 import { router } from 'expo-router';
 
 export default function DashboardScreen() {
-  const { getDashboardStats, isLoading } = useData();
+  const { getDashboardStats, isLoading, getUserTaskCount } = useData();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const stats = getDashboardStats();
+  const taskData = getUserTaskCount();
   const isWorker = user?.role === 'Worker';
   const isAdmin = user?.role === 'Admin';
   const isManager = user?.role === 'Manager';
@@ -30,6 +31,20 @@ export default function DashboardScreen() {
       color: '#2563eb',
       route: '/(tabs)/tools',
       testId: 'quick-my-tools'
+    },
+    {
+      title: 'Assign Tool',
+      icon: Plus,
+      color: '#dc2626',
+      route: '/assign-tool',
+      testId: 'quick-assign-tool'
+    },
+    {
+      title: 'Todo List',
+      icon: CheckSquare,
+      color: '#f59e0b',
+      route: '/todo-list',
+      testId: 'quick-todo-list'
     },
     {
       title: 'Locations',
@@ -207,15 +222,19 @@ export default function DashboardScreen() {
           <View style={styles.kpiGrid}>
             {isWorker ? (
               <>
-                <View style={styles.kpiCard}>
+                <TouchableOpacity 
+                  style={styles.kpiCard}
+                  onPress={() => router.push('/todo-list')}
+                  testID="tasks-card"
+                >
                   <View style={styles.kpiHeader}>
                     <CheckSquare size={20} color="#2563eb" />
                     <Text style={styles.kpiLabel}>Tasks</Text>
                   </View>
-                  <Text style={styles.kpiValue}>5</Text>
+                  <Text style={styles.kpiValue}>{taskData.totalTasks}</Text>
                   <Text style={styles.kpiSubtext}>Assigned</Text>
-                  <Text style={styles.kpiSecondary}>2 Due Today</Text>
-                </View>
+                  <Text style={styles.kpiSecondary}>{taskData.dueToday} Due Today</Text>
+                </TouchableOpacity>
 
                 <View style={styles.kpiCard}>
                   <View style={styles.kpiHeader}>

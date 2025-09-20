@@ -91,10 +91,20 @@ export interface TodoItem {
   description: string;
   completed: boolean;
   priority: 'low' | 'medium' | 'high';
-  createdAt: Date;
-  dueDate?: Date;
+  createdAt: string;
+  dueDate?: string;
   assignedTo?: string; // User ID
   createdBy: string; // User ID
+  
+  // Access control fields
+  visibleToWorkers: boolean; // Whether workers can see this todo
+  editableByWorkers: boolean; // Whether workers can edit this todo
+  visibleToRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can view this todo
+  editableByRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can edit this todo
+}
+  editableByWorkers: boolean; // Whether workers can edit this todo
+  visibleToRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can view this todo
+  editableByRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can edit this todo
 }
 
 export interface DashboardStats {

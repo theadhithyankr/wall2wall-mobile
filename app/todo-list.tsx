@@ -22,31 +22,36 @@ import {
   Save,
   Calendar,
   Clock,
+  Tool,
+  LogIn,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { TodoItem } from '../src/types';
 
 export default function TodoListScreen() {
   const { user } = useAuth();
-  const { todos, addTodo, updateTodo, deleteTodo, toggleTodoComplete } = useData();
+  const { getVisibleTodos, canEditTodo, addTodo, updateTodo, deleteTodo, toggleTodoComplete, workers, managers, getUserTaskCount, tools, attendance } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [newTodo, setNewTodo] = useState({
     title: '',
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
+    visibleToWorkers: true,
+    editableByWorkers: false,
   });
 
+  // Get visible todos for current user
+  const visibleTodos = getVisibleTodos();
+  const taskData = getUserTaskCount();
+  
   // Todo permissions based on role matrix
   const isManager = user?.role === 'Manager';
   const isAdmin = user?.role === 'Admin';
   const isWorker = user?.role === 'Worker';
   
-  const canAccessTodoList = isManager || isAdmin; // Manager CRUD, Admin oversight
+  const canAccessTodoList = isManager || isAdmin || isWorker; // All roles can access, but see different content
   const canCreateTodos = isManager || isAdmin; // Managers and admins can create todos
-  const canEditTodos = isManager || isAdmin; // Managers and admins can edit todos
-  const canDeleteTodos = isManager || isAdmin; // Managers and admins can delete todos
-  const canViewTodos = isManager || isAdmin; // Both can view todos
 
   useEffect(() => {
     if (!canAccessTodoList) {
@@ -69,10 +74,20 @@ export default function TodoListScreen() {
         completed: false,
         priority: newTodo.priority,
         assignedTo: user?.id,
-        createdBy: user?.id
+        createdBy: user?.id || '',
+        visibleToWorkers: newTodo.visibleToWorkers,
+        editableByWorkers: newTodo.editableByWorkers,
+        visibleToRoles: newTodo.visibleToWorkers ? ['Manager', 'Admin', 'Worker'] : ['Manager', 'Admin'],
+        editableByRoles: newTodo.editableByWorkers ? ['Manager', 'Admin', 'Worker'] : ['Manager', 'Admin']
       });
 
-      setNewTodo({ title: '', description: '', priority: 'medium' });
+      setNewTodo({ 
+        title: '', 
+        description: '', 
+        priority: 'medium',
+        visibleToWorkers: true,
+        editableByWorkers: false
+      });
       setShowAddModal(false);
     } catch (error) {
       Alert.alert('Error', 'Failed to add todo');
@@ -80,6 +95,11 @@ export default function TodoListScreen() {
   };
 
   const handleToggleTodo = async (id: string) => {
+    // Use the proper permission check instead of blanket worker restriction
+    if (!canEditTodo(id)) {
+      return;
+    }
+    
     try {
       await toggleTodoComplete(id);
     } catch (error) {
@@ -114,6 +134,8 @@ export default function TodoListScreen() {
       title: todo.title,
       description: todo.description,
       priority: todo.priority,
+      visibleToWorkers: todo.visibleToWorkers,
+      editableByWorkers: todo.editableByWorkers,
     });
     setShowAddModal(true);
   };
@@ -130,10 +152,20 @@ export default function TodoListScreen() {
           title: newTodo.title,
           description: newTodo.description,
           priority: newTodo.priority,
+          visibleToWorkers: newTodo.visibleToWorkers,
+          editableByWorkers: newTodo.editableByWorkers,
+          visibleToRoles: newTodo.visibleToWorkers ? ['manager', 'admin', 'worker'] : ['manager', 'admin'],
+          editableByRoles: newTodo.editableByWorkers ? ['manager', 'admin', 'worker'] : ['manager', 'admin']
         });
 
         setEditingTodo(null);
-        setNewTodo({ title: '', description: '', priority: 'medium' });
+        setNewTodo({ 
+          title: '', 
+          description: '', 
+          priority: 'medium',
+          visibleToWorkers: true,
+          editableByWorkers: false
+        });
         setShowAddModal(false);
       } catch (error) {
         Alert.alert('Error', 'Failed to update todo');
@@ -150,8 +182,57 @@ export default function TodoListScreen() {
     }
   };
 
-  const completedTodos = todos.filter(todo => todo.completed);
-  const pendingTodos = todos.filter(todo => !todo.completed);
+  const getCreatorRole = (createdBy: string): string => {
+    // Check if creator is current user (for admin/manager)
+    if (user?.id === createdBy) {
+      return user.role.toUpperCase();
+    }
+    
+    // Check in managers list
+    const manager = managers.find(m => m.id === createdBy);
+    if (manager) {
+      return manager.role.toUpperCase();
+    }
+    
+    // Check in workers list (though workers shouldn't create todos)
+    const worker = workers.find(w => w.id === createdBy);
+    if (worker) {
+      return 'WORKER';
+    }
+    
+    // Default fallback
+    return 'ADMIN';
+  };
+
+  const completedTodos = visibleTodos.filter(todo => todo.completed);
+  const pendingTodos = visibleTodos.filter(todo => !todo.completed);
+
+  // Get additional task types for workers
+  const getRentedToolsDue = () => {
+    if (!isWorker || !user) return [];
+    const today = new Date().toISOString().split('T')[0];
+    return tools.filter(t => 
+      t.ownershipType === 'Rented' && 
+      t.expectedReturnDate?.split('T')[0] === today &&
+      t.status === 'Assigned'
+    );
+  };
+
+  const needsClockIn = () => {
+    if (!isWorker || !user) return false;
+    const today = new Date().toISOString().split('T')[0];
+    const todayAttendance = attendance.filter(a => 
+      a.workerId === user.id && 
+      a.dateTime.split('T')[0] === today
+    );
+    const lastAction = todayAttendance
+      .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())[0]?.action;
+    
+    return !lastAction || lastAction === 'Clock Out';
+  };
+
+  const rentedToolsDue = getRentedToolsDue();
+  const showClockInReminder = needsClockIn();
 
   if (!canAccessTodoList) {
     return null;
@@ -173,23 +254,76 @@ export default function TodoListScreen() {
 
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{taskData.totalTasks}</Text>
+          <Text style={styles.statLabel}>Total Tasks</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{taskData.dueToday}</Text>
+          <Text style={styles.statLabel}>Due Today</Text>
+        </View>
+        <View style={styles.statCard}>
           <Text style={styles.statNumber}>{pendingTodos.length}</Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{completedTodos.length}</Text>
-          <Text style={styles.statLabel}>Completed</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{todos.length}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={styles.statLabel}>Todos</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scrollView}>
+        {/* Clock-in reminder for workers */}
+        {showClockInReminder && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Daily Tasks</Text>
+            <View style={[styles.todoCard, styles.systemTaskCard]}>
+              <View style={styles.todoContent}>
+                <View style={styles.todoLeft}>
+                  <LogIn size={20} color="#f59e0b" />
+                  <View style={styles.todoText}>
+                    <Text style={styles.todoTitle}>Clock In for Today</Text>
+                    <Text style={styles.todoDescription}>
+                      Remember to clock in to start your workday
+                    </Text>
+                    <View style={styles.todoMeta}>
+                      <View style={[styles.priorityBadge, { backgroundColor: '#f59e0b' }]}>
+                        <Text style={styles.priorityText}>DAILY</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Rented tools due today for workers */}
+        {rentedToolsDue.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tools to Return Today</Text>
+            {rentedToolsDue.map(tool => (
+              <View key={tool.id} style={[styles.todoCard, styles.systemTaskCard]}>
+                <View style={styles.todoContent}>
+                  <View style={styles.todoLeft}>
+                    <Tool size={20} color="#dc2626" />
+                    <View style={styles.todoText}>
+                      <Text style={styles.todoTitle}>Return {tool.name}</Text>
+                      <Text style={styles.todoDescription}>
+                        Rented tool due for return today
+                      </Text>
+                      <View style={styles.todoMeta}>
+                        <View style={[styles.priorityBadge, { backgroundColor: '#dc2626' }]}>
+                          <Text style={styles.priorityText}>DUE TODAY</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Regular todos */}
         {pendingTodos.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pending Tasks</Text>
+            <Text style={styles.sectionTitle}>Todo Tasks</Text>
             {pendingTodos.map(todo => (
               <View key={todo.id} style={styles.todoCard}>
                 <TouchableOpacity
@@ -207,12 +341,22 @@ export default function TodoListScreen() {
                         <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(todo.priority) }]}>
                           <Text style={styles.priorityText}>{todo.priority.toUpperCase()}</Text>
                         </View>
+                        {isWorker && (
+                          <View style={styles.roleBadge}>
+                            <Text style={styles.roleText}>{getCreatorRole(todo.createdBy)}</Text>
+                          </View>
+                        )}
+                        {isWorker && !canEditTodo(todo.id) && (
+                          <View style={styles.readOnlyBadge}>
+                            <Text style={styles.readOnlyText}>READ ONLY</Text>
+                          </View>
+                        )}
                       </View>
                     </View>
                   </View>
                 </TouchableOpacity>
                 <View style={styles.todoActions}>
-                  {canEditTodos && (
+                  {canEditTodo(todo.id) && (
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => startEdit(todo)}
@@ -220,7 +364,7 @@ export default function TodoListScreen() {
                       <Edit3 size={16} color="#6b7280" />
                     </TouchableOpacity>
                   )}
-                  {canDeleteTodos && (
+                  {canEditTodo(todo.id) && (
                     <TouchableOpacity
                           style={styles.actionButton}
                           onPress={() => handleDeleteTodo(todo.id)}
@@ -255,7 +399,7 @@ export default function TodoListScreen() {
                     </View>
                   </View>
                 </TouchableOpacity>
-                {canDeleteTodos && (
+                {canEditTodo(todo.id) && (
                       <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => handleDeleteTodo(todo.id)}
@@ -268,12 +412,12 @@ export default function TodoListScreen() {
           </View>
         )}
 
-        {todos.length === 0 && (
+        {visibleTodos.length === 0 && rentedToolsDue.length === 0 && !showClockInReminder && (
           <View style={styles.emptyState}>
             <CheckSquare size={64} color="#d1d5db" />
-            <Text style={styles.emptyTitle}>No todos yet</Text>
+            <Text style={styles.emptyTitle}>No tasks yet</Text>
             <Text style={styles.emptyDescription}>
-              Create your first todo to get started
+              {canCreateTodos ? 'Create your first todo to get started' : 'No tasks available for you to view'}
             </Text>
           </View>
         )}
@@ -290,7 +434,13 @@ export default function TodoListScreen() {
               onPress={() => {
                 setShowAddModal(false);
                 setEditingTodo(null);
-                setNewTodo({ title: '', description: '', priority: 'medium' });
+                setNewTodo({ 
+                  title: '', 
+                  description: '', 
+                  priority: 'medium',
+                  visibleToWorkers: true,
+                  editableByWorkers: false
+                });
               }}
             >
               <X size={24} color="#6b7280" />
@@ -359,6 +509,37 @@ export default function TodoListScreen() {
                 ))}
               </View>
             </View>
+
+            {/* Permission Controls - Only for Managers/Admins */}
+            {(isManager || isAdmin) && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Visibility Settings</Text>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setNewTodo({ ...newTodo, visibleToWorkers: !newTodo.visibleToWorkers })}
+                  >
+                    <View style={[styles.checkbox, newTodo.visibleToWorkers && styles.checkboxChecked]}>
+                      {newTodo.visibleToWorkers && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Workers</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Edit Permissions</Text>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setNewTodo({ ...newTodo, editableByWorkers: !newTodo.editableByWorkers })}
+                  >
+                    <View style={[styles.checkbox, newTodo.editableByWorkers && styles.checkboxChecked]}>
+                      {newTodo.editableByWorkers && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Workers</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </SafeAreaView>
       </Modal>
@@ -475,6 +656,7 @@ const styles = StyleSheet.create({
   todoMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   priorityBadge: {
     paddingHorizontal: 8,
@@ -482,6 +664,28 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   priorityText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  roleBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#6366f1',
+  },
+  roleText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  readOnlyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: '#9ca3af',
+  },
+  readOnlyText: {
     fontSize: 10,
     fontWeight: '600',
     color: '#ffffff',
@@ -594,5 +798,39 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  checkmark: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#374151',
+    flex: 1,
+  },
+  systemTaskCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#f59e0b',
   },
 });

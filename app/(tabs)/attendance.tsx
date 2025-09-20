@@ -546,9 +546,9 @@ export default function AttendanceScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <View style={styles.contentContainer}>
         {activeTab === 'today' ? renderTodayView() : renderAllView()}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -571,6 +571,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  contentContainer: {
+    flex: 1,
+  },
 
   // Typography Styles
   title: {
@@ -585,17 +588,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
+    minHeight: '100%',
   },
   clockCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 40,
+    backgroundColor: 'transparent',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
     width: '100%',
     maxWidth: 350,
   },

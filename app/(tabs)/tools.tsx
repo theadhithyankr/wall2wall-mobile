@@ -27,7 +27,7 @@ export default function ToolsScreen() {
   const canEditTools = isManager || isAdmin; // Managers and admins can edit tools
   const canDeleteTools = isManager || isAdmin; // Managers and admins can delete tools
   const canViewTools = true; // All roles can view tools
-  const canAssignTools = isManager || isAdmin; // Managers and admins can assign tools
+  const canAssignTools = isManager || isAdmin || isWorker; // All roles can assign tools
 
   const filteredTools = tools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -187,7 +187,11 @@ export default function ToolsScreen() {
         ))}
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {filteredTools.length === 0 ? (
           <View style={styles.emptyState}>
             <Package size={48} color="#9ca3af" />
@@ -302,6 +306,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   toolsList: {
     paddingHorizontal: 20,

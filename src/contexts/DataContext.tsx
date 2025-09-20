@@ -2,6 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
 import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User, TodoItem } from '@/src/types';
+import { useAuth } from './AuthContext';
 
 interface DataState {
   // Data
@@ -48,6 +49,11 @@ interface DataState {
   updateTodo: (id: string, updates: Partial<TodoItem>) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   toggleTodoComplete: (id: string) => Promise<void>;
+  getVisibleTodos: () => TodoItem[]; // Get todos visible to current user
+  canEditTodo: (todoId: string) => boolean; // Check if current user can edit todo
+  
+  // Task calculations
+  getUserTaskCount: () => { totalTasks: number; dueToday: number; needsClockIn: boolean };
   
   // Stats
   getDashboardStats: () => DashboardStats;
@@ -56,6 +62,7 @@ interface DataState {
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const [DataProvider, useData] = createContextHook(() => {
+  const { user } = useAuth();
   const [tools, setTools] = useState<Tool[]>([]);
   const [locations, setLocations] = useState<WorkLocation[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -365,7 +372,12 @@ export const [DataProvider, useData] = createContextHook(() => {
     const newTodo: TodoItem = {
       ...todo,
       id: generateId(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      // Set default permissions - managers can control these
+      visibleToWorkers: todo.visibleToWorkers ?? true,
+      editableByWorkers: todo.editableByWorkers ?? false,
+      visibleToRoles: todo.visibleToRoles ?? ['Manager', 'Admin', 'Worker'],
+      editableByRoles: todo.editableByRoles ?? ['Manager', 'Admin']
     };
     const updatedTodos = [...todos, newTodo];
     setTodos(updatedTodos);
@@ -373,6 +385,11 @@ export const [DataProvider, useData] = createContextHook(() => {
   };
 
   const updateTodo = async (id: string, updates: Partial<TodoItem>) => {
+    // Check if current user can edit this todo
+    if (!canEditTodo(id)) {
+      throw new Error('You do not have permission to edit this todo');
+    }
+    
     const updatedTodos = todos.map(todo => 
       todo.id === id ? { ...todo, ...updates } : todo
     );
@@ -381,17 +398,118 @@ export const [DataProvider, useData] = createContextHook(() => {
   };
 
   const deleteTodo = async (id: string) => {
+    // Check if current user can edit this todo (same permission as editing)
+    if (!canEditTodo(id)) {
+      throw new Error('You do not have permission to delete this todo');
+    }
+    
     const updatedTodos = todos.filter(todo => todo.id !== id);
     setTodos(updatedTodos);
     await saveData('todos', updatedTodos);
   };
 
   const toggleTodoComplete = async (id: string) => {
+    // Check if current user can edit this todo
+    if (!canEditTodo(id)) {
+      throw new Error('You do not have permission to modify this todo');
+    }
+    
     const updatedTodos = todos.map(todo => 
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     );
     setTodos(updatedTodos);
     await saveData('todos', updatedTodos);
+  };
+
+  // Get todos visible to current user
+  const getVisibleTodos = (): TodoItem[] => {
+    if (!user) return [];
+    
+    return todos.filter(todo => {
+      // Admins and managers can see all todos
+      if (user.role === 'Admin' || user.role === 'Manager') {
+        return true;
+      }
+      
+      // Workers can only see todos they're allowed to see
+      if (user.role === 'Worker') {
+        return todo.visibleToWorkers;
+      }
+      
+      return false;
+    });
+  };
+
+  // Check if current user can edit a specific todo
+  const canEditTodo = (todoId: string): boolean => {
+    if (!user) return false;
+    
+    const todo = todos.find(t => t.id === todoId);
+    if (!todo) return false;
+    
+    // Admins can edit all todos
+    if (user.role === 'Admin') {
+      return true;
+    }
+    
+    // Managers can edit todos they created or if they have edit permissions
+    if (user.role === 'Manager') {
+      return todo.createdBy === user.id || todo.editableByRoles.includes('manager');
+    }
+    
+    // Workers can only edit if explicitly allowed
+    if (user.role === 'Worker') {
+      return todo.editableByWorkers;
+    }
+    
+    return false;
+  };
+
+  // Get comprehensive task count for current user
+  const getUserTaskCount = () => {
+    if (!user) return { totalTasks: 0, dueToday: 0, needsClockIn: false };
+    
+    const today = new Date().toISOString().split('T')[0];
+    let totalTasks = 0;
+    let dueToday = 0;
+    let needsClockIn = false;
+    
+    // 1. Count visible todos for current user
+    const userTodos = getVisibleTodos().filter(todo => !todo.completed);
+    totalTasks += userTodos.length;
+    
+    // Count todos due today
+    const todosDueToday = userTodos.filter(todo => 
+      todo.dueDate && todo.dueDate.split('T')[0] === today
+    ).length;
+    dueToday += todosDueToday;
+    
+    // 2. For workers, add rented tools they need to return
+    if (user.role === 'Worker') {
+      const rentedToolsDueToday = tools.filter(t => 
+        t.ownershipType === 'Rented' && 
+        t.expectedReturnDate?.split('T')[0] === today &&
+        t.status === 'Assigned'
+      ).length;
+      totalTasks += rentedToolsDueToday;
+      dueToday += rentedToolsDueToday;
+      
+      // 3. Check if worker needs to clock in today
+      const todayAttendance = attendance.filter(a => 
+        a.workerId === user.id && 
+        a.dateTime.split('T')[0] === today
+      );
+      const lastAction = todayAttendance
+        .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())[0]?.action;
+      
+      needsClockIn = !lastAction || lastAction === 'Clock Out';
+      if (needsClockIn) {
+        totalTasks += 1;
+        dueToday += 1;
+      }
+    }
+    
+    return { totalTasks, dueToday, needsClockIn };
   };
 
   // Dashboard stats
@@ -453,6 +571,9 @@ export const [DataProvider, useData] = createContextHook(() => {
     updateTodo,
     deleteTodo,
     toggleTodoComplete,
+    getVisibleTodos,
+    canEditTodo,
+    getUserTaskCount,
     getDashboardStats
   } as DataState;
 });

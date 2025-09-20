@@ -19,7 +19,9 @@ export default function MoreScreen() {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const isManager = user?.role === 'Manager';
-  const canAccessTodoList = ['Admin', 'Manager'].includes(user?.role || ''); // Both admin and manager can access todo list
+  const isWorker = user?.role === 'Worker';
+  const canAccessTodoList = ['Admin', 'Manager', 'Worker'].includes(user?.role || ''); // All roles can access todo list
+  const canAssignTools = isAdmin || isManager || isWorker; // All roles can assign tools
 
   const menuSections = [
     {
@@ -39,13 +41,13 @@ export default function MoreScreen() {
           onPress: () => router.push('/managers'),
           testId: 'managers-menu'
         }] : []),
-        {
+        ...(canAssignTools ? [{
           title: 'Assign Tool',
           subtitle: 'Quick tool assignment',
           icon: ArrowRightLeft,
           onPress: () => router.push('/assign-tool'),
           testId: 'assign-tool-menu'
-        },
+        }] : []),
         ...(canAccessTodoList ? [{
           title: 'Todo List',
           subtitle: 'Manage your tasks',
