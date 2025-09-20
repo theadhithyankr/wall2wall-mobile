@@ -2,18 +2,23 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Filter, Package, AlertCircle } from 'lucide-react-native';
 import { Tool, ToolFilter } from '@/types';
 import { router } from 'expo-router';
 
 export default function ToolsScreen() {
   const { tools, locations } = useData();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<ToolFilter>({
     ownership: 'All',
     status: 'All',
     search: ''
   });
+
+  // Only managers can add tools, not admins
+  const canAddTools = user?.role === 'Manager';
 
   const filteredTools = tools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -102,13 +107,15 @@ export default function ToolsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Tools</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/add-tool')}
-          testID="add-tool-button"
-        >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
+        {canAddTools && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/add-tool')}
+            testID="add-tool-button"
+          >
+            <Plus size={24} color="#ffffff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -156,7 +163,7 @@ export default function ToolsScreen() {
             <Text style={styles.emptySubtitle}>
               {searchQuery ? 'Try adjusting your search' : 'Add your first tool to get started'}
             </Text>
-            {!searchQuery && (
+            {!searchQuery && canAddTools && (
               <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => router.push('/add-tool')}

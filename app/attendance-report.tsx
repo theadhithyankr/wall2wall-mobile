@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
 import { Calendar, Download, Filter, FileText, ArrowLeft } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AttendanceReportScreen() {
   const { attendance, workers, locations } = useData();
@@ -11,6 +12,10 @@ export default function AttendanceReportScreen() {
   const [endDate, setEndDate] = useState('');
   const [selectedWorker, setSelectedWorker] = useState('All');
   const [selectedLocation, setSelectedLocation] = useState('All');
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [startDateObj, setStartDateObj] = useState(new Date());
+  const [endDateObj, setEndDateObj] = useState(new Date());
 
   const filteredAttendance = attendance.filter(record => {
     const recordDate = record.dateTime.split('T')[0];
@@ -42,6 +47,22 @@ export default function AttendanceReportScreen() {
         { text: 'Export', onPress: () => console.log('Exporting attendance report...') }
       ]
     );
+  };
+
+  const onStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setStartDateObj(selectedDate);
+      setStartDate(selectedDate.toISOString().split('T')[0]);
+    }
+  };
+
+  const onEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setEndDateObj(selectedDate);
+      setEndDate(selectedDate.toISOString().split('T')[0]);
+    }
   };
 
   const formatDateTime = (dateTime: string) => {
@@ -82,23 +103,43 @@ export default function AttendanceReportScreen() {
           <View style={styles.dateFilters}>
             <View style={styles.dateInput}>
               <Text style={styles.inputLabel}>Start Date</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                value={startDate}
-                onChangeText={setStartDate}
-                testID="start-date-input"
-              />
+              <TouchableOpacity 
+                style={styles.datePickerButton}
+                onPress={() => setShowStartDatePicker(true)}
+              >
+                <Calendar size={16} color="#64748b" />
+                <Text style={styles.datePickerText}>
+                  {startDate || 'Select start date'}
+                </Text>
+              </TouchableOpacity>
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={startDateObj}
+                  mode="date"
+                  display="default"
+                  onChange={onStartDateChange}
+                />
+              )}
             </View>
             <View style={styles.dateInput}>
               <Text style={styles.inputLabel}>End Date</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                value={endDate}
-                onChangeText={setEndDate}
-                testID="end-date-input"
-              />
+              <TouchableOpacity 
+                style={styles.datePickerButton}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Calendar size={16} color="#64748b" />
+                <Text style={styles.datePickerText}>
+                  {endDate || 'Select end date'}
+                </Text>
+              </TouchableOpacity>
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={endDateObj}
+                  mode="date"
+                  display="default"
+                  onChange={onEndDateChange}
+                />
+              )}
             </View>
           </View>
 
@@ -225,6 +266,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#374151',
     marginBottom: 8,
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+    gap: 8,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#374151',
+    flex: 1,
   },
   textInput: {
     borderWidth: 1,

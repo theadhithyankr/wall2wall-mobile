@@ -46,15 +46,6 @@ export default function TabLayout() {
               tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} />,
             }}
           />}
-      {isWorker ? (
-        <Tabs.Screen
-          name="tasks"
-          options={{
-            title: "Tasks",
-            tabBarIcon: ({ color, size }) => <CheckSquare color={color} size={size} />,
-          }}
-        />
-      ) : null}
       <Tabs.Screen
         name="attendance"
         options={{

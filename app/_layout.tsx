@@ -15,8 +15,9 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const canManageUsers = user?.role === 'Admin';
-  const canManageTools = ['Admin', 'Manager'].includes(user?.role || '');
+  const canManageTools = user?.role === 'Manager'; // Only managers can manage tools, not admins
   const canViewReports = ['Admin', 'Manager'].includes(user?.role || '');
+  const canAccessTodoList = ['Admin', 'Manager'].includes(user?.role || ''); // Both admin and manager can access todo list
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -38,9 +39,9 @@ function RootLayoutNav() {
       <Stack.Screen name="otp" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {canManageTools && <Stack.Screen name="add-tool" options={{ title: "Add Tool" }} />}
-      {canManageTools && <Stack.Screen name="add-location" options={{ title: "Add Location" }} />}
-      {canManageTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
-      {canManageUsers && <Stack.Screen name="add-worker" options={{ title: "Add Worker" }} />}
+        {canManageTools && <Stack.Screen name="add-location" options={{ title: "Add Location" }} />}
+        {canManageTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
+        {canAccessTodoList && <Stack.Screen name="todo-list" options={{ title: "Todo List" }} />}
       {canManageUsers && <Stack.Screen name="workers" options={{ title: "Workers" }} />}
       {canManageUsers && <Stack.Screen name="add-manager" options={{ title: "Add Manager" }} />}
       {canManageUsers && <Stack.Screen name="managers" options={{ title: "Managers" }} />}

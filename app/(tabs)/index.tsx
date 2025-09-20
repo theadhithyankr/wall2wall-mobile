@@ -13,36 +13,44 @@ export default function DashboardScreen() {
   const stats = getDashboardStats();
   const isWorker = user?.role === 'Worker';
   const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
 
   const quickActions = isWorker ? [] : [
-    {
+    ...(isManager ? [{
       title: 'Add Tool',
       icon: Wrench,
       color: '#2563eb',
       route: '/add-tool',
       testId: 'quick-add-tool'
-    },
-    {
+    }] : []),
+    ...(isManager ? [{
       title: 'Add Location',
       icon: MapPin,
       color: '#059669',
       route: '/add-location',
       testId: 'quick-add-location'
-    },
-    {
+    }] : []),
+    ...(isAdmin ? [{
       title: 'Add Worker',
       icon: Users,
       color: '#7c3aed',
       route: '/add-worker',
       testId: 'quick-add-worker'
-    },
-    {
+    }] : []),
+    ...(isAdmin ? [{
+      title: 'Todo List',
+      icon: CheckSquare,
+      color: '#f59e0b',
+      route: '/todo-list',
+      testId: 'quick-todo-list'
+    }] : []),
+    ...(isManager ? [{
       title: 'Assign Tool',
       icon: Plus,
       color: '#dc2626',
       route: '/assign-tool',
       testId: 'quick-assign-tool'
-    }
+    }] : [])
   ];
 
   const alerts = [];

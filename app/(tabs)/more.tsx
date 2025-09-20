@@ -10,13 +10,16 @@ import {
   LogOut,
   ChevronRight,
   User,
-  Phone
+  Phone,
+  CheckSquare
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function MoreScreen() {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const canAccessTodoList = ['Admin', 'Manager'].includes(user?.role || ''); // Both admin and manager can access todo list
 
   const menuSections = [
     {
@@ -42,7 +45,14 @@ export default function MoreScreen() {
           icon: ArrowRightLeft,
           onPress: () => router.push('/assign-tool'),
           testId: 'assign-tool-menu'
-        }
+        },
+        ...(canAccessTodoList ? [{
+          title: 'Todo List',
+          subtitle: 'Manage your tasks',
+          icon: CheckSquare,
+          onPress: () => router.push('/todo-list'),
+          testId: 'todo-list-menu'
+        }] : [])
       ]
     },
     {
