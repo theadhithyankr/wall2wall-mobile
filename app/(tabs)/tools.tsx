@@ -17,8 +17,16 @@ export default function ToolsScreen() {
     search: ''
   });
 
-  // Only managers can add tools, not admins
-  const canAddTools = user?.role === 'Manager';
+  // Tool management permissions based on role matrix
+  const isManager = user?.role === 'Manager';
+  const isAdmin = user?.role === 'Admin';
+  const isWorker = user?.role === 'Worker';
+  
+  const canAddTools = isManager; // Only managers can add tools
+  const canEditTools = isManager; // Only managers can edit tools
+  const canDeleteTools = isManager; // Only managers can delete tools
+  const canViewTools = true; // All roles can view tools
+  const canAssignTools = isManager; // Only managers can assign tools
 
   const filteredTools = tools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

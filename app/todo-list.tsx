@@ -45,10 +45,16 @@ export default function TodoListScreen() {
     priority: 'medium' as 'low' | 'medium' | 'high',
   });
 
-  // Check if user is manager
+  // Todo permissions based on role matrix
   const isManager = user?.role === 'Manager';
   const isAdmin = user?.role === 'Admin';
-  const canAccessTodoList = ['Admin', 'Manager'].includes(user?.role || '');
+  const isWorker = user?.role === 'Worker';
+  
+  const canAccessTodoList = isManager || isAdmin; // Manager CRUD, Admin oversight
+  const canCreateTodos = isManager; // Only managers can create todos
+  const canEditTodos = isManager; // Only managers can edit todos
+  const canDeleteTodos = isManager; // Only managers can delete todos
+  const canViewTodos = isManager || isAdmin; // Both can view todos
 
   useEffect(() => {
     if (!canAccessTodoList) {
@@ -168,20 +174,22 @@ export default function TodoListScreen() {
   const completedTodos = todos.filter(todo => todo.completed);
   const pendingTodos = todos.filter(todo => !todo.completed);
 
-  if (!isManager) {
+  if (!canAccessTodoList) {
     return null;
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Todo List</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
+        <Text style={styles.title}>{isAdmin ? 'Team Todo List' : 'My Todo List'}</Text>
+        {canCreateTodos && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setShowAddModal(true)}
+          >
+            <Plus size={24} color="#ffffff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.statsContainer}>
@@ -225,18 +233,22 @@ export default function TodoListScreen() {
                   </View>
                 </TouchableOpacity>
                 <View style={styles.todoActions}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => startEdit(todo)}
-                  >
-                    <Edit3 size={16} color="#6b7280" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => deleteTodo(todo.id)}
-                  >
-                    <Trash2 size={16} color="#ef4444" />
-                  </TouchableOpacity>
+                  {canEditTodos && (
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => startEdit(todo)}
+                    >
+                      <Edit3 size={16} color="#6b7280" />
+                    </TouchableOpacity>
+                  )}
+                  {canDeleteTodos && (
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={() => deleteTodo(todo.id)}
+                    >
+                      <Trash2 size={16} color="#ef4444" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ))}
@@ -264,12 +276,14 @@ export default function TodoListScreen() {
                     </View>
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => deleteTodo(todo.id)}
-                >
-                  <Trash2 size={16} color="#ef4444" />
-                </TouchableOpacity>
+                {canDeleteTodos && (
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => deleteTodo(todo.id)}
+                  >
+                    <Trash2 size={16} color="#ef4444" />
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </View>

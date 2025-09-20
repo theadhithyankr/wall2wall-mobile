@@ -2,11 +2,23 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, User, Phone } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function WorkersScreen() {
   const { workers, locations } = useData();
+  const { user } = useAuth();
+
+  // User management permissions based on role matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  const canAddWorkers = isAdmin; // Only admins can add workers
+  const canViewWorkers = isAdmin || isManager; // Admins and managers can view workers
+  const canEditWorkers = isAdmin; // Only admins can edit workers
+  const canDeleteWorkers = isAdmin; // Only admins can delete workers
 
   const getLocationName = (locationId?: string) => {
     if (!locationId) return 'No default location';
@@ -59,13 +71,15 @@ export default function WorkersScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Workers</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/add-worker')}
-          testID="add-worker-button"
-        >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
+        {canAddWorkers && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/add-worker')}
+            testID="add-worker-button"
+          >
+            <Plus size={24} color="#ffffff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -76,13 +90,15 @@ export default function WorkersScreen() {
             <Text style={styles.emptySubtitle}>
               Add your first worker to get started
             </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={() => router.push('/add-worker')}
-              testID="empty-add-worker"
-            >
-              <Text style={styles.emptyButtonText}>Add Worker</Text>
-            </TouchableOpacity>
+            {canAddWorkers && (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => router.push('/add-worker')}
+                testID="empty-add-worker"
+              >
+                <Text style={styles.emptyButtonText}>Add Worker</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <View style={styles.workersList}>

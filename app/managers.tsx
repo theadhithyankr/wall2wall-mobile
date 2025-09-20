@@ -11,11 +11,23 @@ import {
 import { Stack, router } from 'expo-router';
 import { Plus, Trash2, Mail, Phone, UserCheck } from 'lucide-react-native';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types';
 
 export default function ManagersScreen() {
   const { managers, deleteManager } = useData();
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+
+  // User management permissions based on role matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  const canAddManagers = isAdmin; // Only admins can add managers
+  const canViewManagers = isAdmin; // Only admins can view managers
+  const canEditManagers = isAdmin; // Only admins can edit managers
+  const canDeleteManagers = isAdmin; // Only admins can delete managers
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -70,12 +82,14 @@ export default function ManagersScreen() {
           <Text style={styles.roleText}>Manager</Text>
         </View>
         
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemoveManager(item)}
-        >
-          <Trash2 size={20} color="#ef4444" />
-        </TouchableOpacity>
+        {canDeleteManagers && (
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => handleRemoveManager(item)}
+          >
+            <Trash2 size={20} color="#ef4444" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.contactInfo}>
@@ -105,13 +119,15 @@ export default function ManagersScreen() {
       <Text style={styles.emptyDescription}>
         Add your first manager to get started with team management.
       </Text>
-      <TouchableOpacity
-        style={styles.emptyButton}
-        onPress={() => router.push('/add-manager')}
-      >
-        <Plus size={20} color="#ffffff" />
-        <Text style={styles.emptyButtonText}>Add First Manager</Text>
-      </TouchableOpacity>
+      {canAddManagers && (
+        <TouchableOpacity
+          style={styles.emptyButton}
+          onPress={() => router.push('/add-manager')}
+        >
+          <Plus size={20} color="#ffffff" />
+          <Text style={styles.emptyButtonText}>Add First Manager</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -120,14 +136,14 @@ export default function ManagersScreen() {
       <Stack.Screen 
         options={{ 
           title: 'Managers',
-          headerRight: () => (
+          headerRight: () => canAddManagers ? (
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => router.push('/add-manager')}
             >
               <Plus size={24} color="#2563eb" />
             </TouchableOpacity>
-          ),
+          ) : undefined,
         }} 
       />
 
@@ -153,7 +169,7 @@ export default function ManagersScreen() {
         ListEmptyComponent={renderEmptyState}
       />
 
-      {managers.length > 0 && (
+      {managers.length > 0 && canAddManagers && (
         <View style={styles.floatingButtonContainer}>
           <TouchableOpacity
             style={styles.floatingButton}

@@ -2,12 +2,24 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, MapPin, Phone, Wrench, Users } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function LocationsScreen() {
   const { locations, tools, attendance } = useData();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Location management permissions based on role matrix
+  const isManager = user?.role === 'Manager';
+  const isAdmin = user?.role === 'Admin';
+  const isWorker = user?.role === 'Worker';
+  
+  const canAddLocations = isManager; // Only managers can add locations
+  const canEditLocations = isManager; // Only managers can edit locations
+  const canDeleteLocations = isManager; // Only managers can delete locations
+  const canViewLocations = true; // All roles can view locations
 
   const filteredLocations = locations.filter(location =>
     location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,13 +91,15 @@ export default function LocationsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Locations</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/add-location')}
-          testID="add-location-button"
-        >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
+        {canAddLocations && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/add-location')}
+            testID="add-location-button"
+          >
+            <Plus size={24} color="#ffffff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -109,7 +123,7 @@ export default function LocationsScreen() {
             <Text style={styles.emptySubtitle}>
               {searchQuery ? 'Try adjusting your search' : 'Add your first work location to get started'}
             </Text>
-            {!searchQuery && (
+            {!searchQuery && canAddLocations && (
               <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => router.push('/add-location')}

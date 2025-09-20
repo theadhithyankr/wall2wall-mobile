@@ -2,14 +2,24 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 import { Settings as SettingsIcon, Building, Clock, MapPin, ArrowLeft } from 'lucide-react-native';
 
 export default function SettingsScreen() {
+  const { user } = useAuth();
   const [companyName, setCompanyName] = useState('Interior Design Ops');
   const [timezone, setTimezone] = useState('Asia/Kolkata');
   const [locationAccuracy, setLocationAccuracy] = useState(true);
   const [autoClockOut, setAutoClockOut] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Settings permissions based on role matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  const canConfigureSystem = isAdmin; // Only admins can configure system settings
+  const canConfigurePersonal = true; // All users can configure personal settings
 
   const handleSave = () => {
     console.log('Saving settings...');
@@ -35,112 +45,120 @@ export default function SettingsScreen() {
       />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Company Information</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingIcon}>
-                <Building size={20} color="#2563eb" />
+        {canConfigureSystem && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Company Information</Text>
+            <View style={styles.settingCard}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingIcon}>
+                  <Building size={20} color="#2563eb" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingLabel}>Company Name</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={companyName}
+                    onChangeText={setCompanyName}
+                    placeholder="Enter company name"
+                    testID="company-name-input"
+                  />
+                </View>
               </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingLabel}>Company Name</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={companyName}
-                  onChangeText={setCompanyName}
-                  placeholder="Enter company name"
-                  testID="company-name-input"
+            </View>
+          </View>
+        )}
+
+        {canConfigureSystem && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Time & Location</Text>
+            <View style={styles.settingCard}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingIcon}>
+                  <Clock size={20} color="#2563eb" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingLabel}>Timezone</Text>
+                  <TouchableOpacity style={styles.dropdown}>
+                    <Text style={styles.dropdownText}>{timezone}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              <View style={styles.separator} />
+              
+              <View style={styles.settingRow}>
+                <View style={styles.settingIcon}>
+                  <MapPin size={20} color="#2563eb" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingLabel}>High Accuracy GPS</Text>
+                  <Text style={styles.settingDescription}>
+                    Use high accuracy GPS for attendance tracking
+                  </Text>
+                </View>
+                <Switch
+                  value={locationAccuracy}
+                  onValueChange={setLocationAccuracy}
+                  trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
+                  thumbColor={locationAccuracy ? '#2563eb' : '#64748b'}
+                  testID="location-accuracy-switch"
                 />
               </View>
             </View>
           </View>
-        </View>
+        )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Time & Location</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingIcon}>
-                <Clock size={20} color="#2563eb" />
+        {canConfigureSystem && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Attendance Settings</Text>
+            <View style={styles.settingCard}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingIcon}>
+                  <Clock size={20} color="#2563eb" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingLabel}>Auto Clock Out</Text>
+                  <Text style={styles.settingDescription}>
+                    Automatically clock out workers after 12 hours
+                  </Text>
+                </View>
+                <Switch
+                  value={autoClockOut}
+                  onValueChange={setAutoClockOut}
+                  trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
+                  thumbColor={autoClockOut ? '#2563eb' : '#64748b'}
+                  testID="auto-clock-out-switch"
+                />
               </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingLabel}>Timezone</Text>
-                <TouchableOpacity style={styles.dropdown}>
-                  <Text style={styles.dropdownText}>{timezone}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            
-            <View style={styles.separator} />
-            
-            <View style={styles.settingRow}>
-              <View style={styles.settingIcon}>
-                <MapPin size={20} color="#2563eb" />
-              </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingLabel}>High Accuracy GPS</Text>
-                <Text style={styles.settingDescription}>
-                  Use high accuracy GPS for attendance tracking
-                </Text>
-              </View>
-              <Switch
-                value={locationAccuracy}
-                onValueChange={setLocationAccuracy}
-                trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
-                thumbColor={locationAccuracy ? '#2563eb' : '#64748b'}
-                testID="location-accuracy-switch"
-              />
             </View>
           </View>
-        </View>
+        )}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attendance Settings</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingIcon}>
-                <Clock size={20} color="#2563eb" />
+        {canConfigurePersonal && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notifications</Text>
+            <View style={styles.settingCard}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingIcon}>
+                  <SettingsIcon size={20} color="#2563eb" />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingLabel}>Push Notifications</Text>
+                  <Text style={styles.settingDescription}>
+                    Receive notifications for overdue tools and attendance alerts
+                  </Text>
+                </View>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
+                  thumbColor={notificationsEnabled ? '#2563eb' : '#64748b'}
+                  testID="notifications-switch"
+                />
               </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingLabel}>Auto Clock Out</Text>
-                <Text style={styles.settingDescription}>
-                  Automatically clock out workers after 12 hours
-                </Text>
-              </View>
-              <Switch
-                value={autoClockOut}
-                onValueChange={setAutoClockOut}
-                trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
-                thumbColor={autoClockOut ? '#2563eb' : '#64748b'}
-                testID="auto-clock-out-switch"
-              />
             </View>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-          <View style={styles.settingCard}>
-            <View style={styles.settingRow}>
-              <View style={styles.settingIcon}>
-                <SettingsIcon size={20} color="#2563eb" />
-              </View>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingLabel}>Push Notifications</Text>
-                <Text style={styles.settingDescription}>
-                  Receive notifications for overdue tools and attendance alerts
-                </Text>
-              </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: '#e2e8f0', true: '#93c5fd' }}
-                thumbColor={notificationsEnabled ? '#2563eb' : '#64748b'}
-                testID="notifications-switch"
-              />
-            </View>
-          </View>
-        </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>GPS Consent</Text>

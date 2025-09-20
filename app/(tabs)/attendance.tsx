@@ -2,15 +2,31 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Clock, User, Calendar } from 'lucide-react-native';
 
 export default function AttendanceScreen() {
   const { attendance, workers, locations } = useData();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
+
+  // Attendance permissions based on role matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  const canViewAllAttendance = isAdmin || isManager; // Admin and Manager can view all attendance
+  const canViewOwnAttendance = true; // All roles can view their own attendance
+  const canMarkAttendance = isWorker; // Only workers can mark attendance
 
   const today = new Date().toISOString().split('T')[0];
   
-  const todayAttendance = attendance.filter(record => 
+  // Filter attendance based on user permissions
+  const filteredAttendance = canViewAllAttendance 
+    ? attendance 
+    : attendance.filter(record => record.workerId === user?.id);
+  
+  const todayAttendance = filteredAttendance.filter(record => 
     record.dateTime.split('T')[0] === today
   );
 
@@ -136,7 +152,7 @@ export default function AttendanceScreen() {
   };
 
   const renderAllView = () => {
-    const sortedAttendance = [...attendance].sort((a, b) => 
+    const sortedAttendance = [...filteredAttendance].sort((a, b) => 
       new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime()
     );
 

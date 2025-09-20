@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
 import { useData } from '@/contexts/DataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Calendar, Download, Filter, FileText, ArrowLeft } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function AttendanceReportScreen() {
   const { attendance, workers, locations } = useData();
+  const { user } = useAuth();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedWorker, setSelectedWorker] = useState('All');
@@ -17,7 +19,20 @@ export default function AttendanceReportScreen() {
   const [startDateObj, setStartDateObj] = useState(new Date());
   const [endDateObj, setEndDateObj] = useState(new Date());
 
-  const filteredAttendance = attendance.filter(record => {
+  // Report permissions based on role matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  const canViewAllReports = isAdmin || isManager; // Admin and Manager can view all reports
+  const canExportReports = isAdmin || isManager; // Admin and Manager can export reports
+  
+  // Filter attendance based on user permissions
+  const baseAttendance = canViewAllReports 
+    ? attendance 
+    : attendance.filter(record => record.workerId === user?.id);
+
+  const filteredAttendance = baseAttendance.filter(record => {
     const recordDate = record.dateTime.split('T')[0];
     const matchesDateRange = (!startDate || recordDate >= startDate) && 
                             (!endDate || recordDate <= endDate);
@@ -144,13 +159,15 @@ export default function AttendanceReportScreen() {
           </View>
 
           <View style={styles.dropdownFilters}>
-            <View style={styles.filterGroup}>
-              <Text style={styles.inputLabel}>Worker</Text>
-              <TouchableOpacity style={styles.dropdown}>
-                <Text style={styles.dropdownText}>{selectedWorker}</Text>
-                <Filter size={16} color="#64748b" />
-              </TouchableOpacity>
-            </View>
+            {canViewAllReports && (
+              <View style={styles.filterGroup}>
+                <Text style={styles.inputLabel}>Worker</Text>
+                <TouchableOpacity style={styles.dropdown}>
+                  <Text style={styles.dropdownText}>{selectedWorker}</Text>
+                  <Filter size={16} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={styles.filterGroup}>
               <Text style={styles.inputLabel}>Location</Text>
               <TouchableOpacity style={styles.dropdown}>
@@ -186,10 +203,12 @@ export default function AttendanceReportScreen() {
         <View style={styles.recordsSection}>
           <View style={styles.recordsHeader}>
             <Text style={styles.sectionTitle}>Records</Text>
-            <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
-              <Download size={16} color="#2563eb" />
-              <Text style={styles.exportButtonText}>Export CSV</Text>
-            </TouchableOpacity>
+            {canExportReports && (
+              <TouchableOpacity style={styles.exportButton} onPress={handleExport}>
+                <Download size={16} color="#2563eb" />
+                <Text style={styles.exportButtonText}>Export CSV</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {filteredAttendance.length === 0 ? (

@@ -14,10 +14,39 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const canManageUsers = user?.role === 'Admin';
-  const canManageTools = user?.role === 'Manager'; // Only managers can manage tools, not admins
-  const canViewReports = ['Admin', 'Manager'].includes(user?.role || '');
-  const canAccessTodoList = ['Admin', 'Manager'].includes(user?.role || ''); // Both admin and manager can access todo list
+  // Role-based permissions according to the permission matrix
+  const isAdmin = user?.role === 'Admin';
+  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'Worker';
+  
+  // User Management - Admin only
+  const canManageUsers = isAdmin;
+  const canAddWorkers = isAdmin;
+  const canViewWorkers = isAdmin || isManager;
+  const canManageManagers = isAdmin;
+  
+  // Tool Management - Manager only for CRUD, others view only
+  const canManageTools = isManager;
+  const canViewTools = true; // All roles can view
+  const canAssignTools = isManager;
+  
+  // Location Management - Manager only for CRUD, others view only
+  const canManageLocations = isManager;
+  const canViewLocations = true; // All roles can view
+  
+  // Reports & Analytics
+  const canViewReports = isAdmin || isManager;
+  const canViewAllAttendance = isAdmin || isManager;
+  const canExportData = isAdmin || isManager;
+  
+  // Todo List Management
+  const canAccessTodoList = isAdmin || isManager || isWorker;
+  const canManageTodoList = isManager; // Only manager can CRUD
+  const canOversightTodoList = isAdmin; // Admin can view for oversight
+  
+  // Settings
+  const canAccessSettings = true; // All roles
+  const canManageSystemConfig = isAdmin;
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -39,12 +68,13 @@ function RootLayoutNav() {
       <Stack.Screen name="otp" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       {canManageTools && <Stack.Screen name="add-tool" options={{ title: "Add Tool" }} />}
-        {canManageTools && <Stack.Screen name="add-location" options={{ title: "Add Location" }} />}
-        {canManageTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
+        {canManageLocations && <Stack.Screen name="add-location" options={{ title: "Add Location" }} />}
+        {canAssignTools && <Stack.Screen name="assign-tool" options={{ title: "Assign Tool" }} />}
         {canAccessTodoList && <Stack.Screen name="todo-list" options={{ title: "Todo List" }} />}
-      {canManageUsers && <Stack.Screen name="workers" options={{ title: "Workers" }} />}
-      {canManageUsers && <Stack.Screen name="add-manager" options={{ title: "Add Manager" }} />}
-      {canManageUsers && <Stack.Screen name="managers" options={{ title: "Managers" }} />}
+        {canAddWorkers && <Stack.Screen name="add-worker" options={{ title: "Add Worker" }} />}
+        {canViewWorkers && <Stack.Screen name="workers" options={{ title: "Workers" }} />}
+        {canManageManagers && <Stack.Screen name="add-manager" options={{ title: "Add Manager" }} />}
+        {canManageManagers && <Stack.Screen name="managers" options={{ title: "Managers" }} />}
       <Stack.Screen name="location-detail/[id]" options={{ title: "Location Details" }} />
       <Stack.Screen name="tool-detail/[id]" options={{ title: "Tool Details" }} />
       {canViewReports && <Stack.Screen name="attendance-report" options={{ title: "Attendance Report" }} />}
