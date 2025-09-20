@@ -360,14 +360,18 @@ export default function TodoListScreen() {
                     style={[
                       styles.priorityOption,
                       newTodo.priority === priority && styles.prioritySelected,
-                      { borderColor: getPriorityColor(priority) }
+                      { borderColor: getPriorityColor(priority) },
+                      newTodo.priority === priority && { backgroundColor: getPriorityColor(priority) }
                     ]}
                     onPress={() => setNewTodo({ ...newTodo, priority })}
                   >
                     <Text
                       style={[
                         styles.priorityOptionText,
-                        newTodo.priority === priority && { color: getPriorityColor(priority) }
+                        newTodo.priority === priority && { 
+                          color: '#ffffff',
+                          fontWeight: '700'
+                        }
                       ]}
                     >
                       {priority.toUpperCase()}
@@ -591,13 +595,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     backgroundColor: '#ffffff',
+    borderColor: '#e5e7eb',
+    transition: 'all 0.2s ease',
   },
   prioritySelected: {
-    backgroundColor: '#f8fafc',
+    borderWidth: 2,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   priorityOptionText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
