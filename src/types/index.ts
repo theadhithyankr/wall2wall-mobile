@@ -78,12 +78,23 @@ export interface AttendanceRecord {
 
 export interface User {
   id: string;
+  name: string;
   phone: string;
-  name?: string;
-  role: 'Admin' | 'Manager' | 'Worker';
-  createdAt: string;
-  skills?: string[];
-  isActive?: boolean;
+  email: string;
+  role: 'manager' | 'admin' | 'worker';
+  createdAt?: string;
+}
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  dueDate?: Date;
+  assignedTo?: string; // User ID
+  createdBy: string; // User ID
 }
 
 export interface DashboardStats {

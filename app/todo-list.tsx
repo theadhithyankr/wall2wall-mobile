@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useData } from '@/src/contexts/DataContext';
 import {
   Plus,
   CheckSquare,
@@ -23,20 +24,11 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-
-interface TodoItem {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: Date;
-  dueDate?: Date;
-}
+import { TodoItem } from '../src/types';
 
 export default function TodoListScreen() {
   const { user } = useAuth();
-  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const { todos, addTodo, updateTodo, deleteTodo, toggleTodoComplete } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [newTodo, setNewTodo] = useState({
@@ -58,62 +50,44 @@ export default function TodoListScreen() {
 
   useEffect(() => {
     if (!canAccessTodoList) {
-      router.back();
+      router.replace('/');
       return;
     }
-    loadTodos();
+    // Todos are now loaded automatically via DataContext
   }, [canAccessTodoList]);
 
-  const loadTodos = () => {
-    // In a real app, this would load from AsyncStorage or API
-    const sampleTodos: TodoItem[] = [
-      {
-        id: '1',
-        title: 'Review tool inventory',
-        description: 'Check all tools and update status',
-        completed: false,
-        priority: 'high',
-        createdAt: new Date(),
-      },
-      {
-        id: '2',
-        title: 'Schedule team meeting',
-        description: 'Plan weekly team sync',
-        completed: true,
-        priority: 'medium',
-        createdAt: new Date(),
-      },
-    ];
-    setTodos(sampleTodos);
-  };
-
-  const addTodo = () => {
+  const handleAddTodo = async () => {
     if (!newTodo.title.trim()) {
       Alert.alert('Error', 'Please enter a title for the todo');
       return;
     }
 
-    const todo: TodoItem = {
-      id: Date.now().toString(),
-      title: newTodo.title,
-      description: newTodo.description,
-      completed: false,
-      priority: newTodo.priority,
-      createdAt: new Date(),
-    };
+    try {
+      await addTodo({
+        title: newTodo.title,
+        description: newTodo.description,
+        completed: false,
+        priority: newTodo.priority,
+        assignedTo: user?.id,
+        createdBy: user?.id
+      });
 
-    setTodos([todo, ...todos]);
-    setNewTodo({ title: '', description: '', priority: 'medium' });
-    setShowAddModal(false);
+      setNewTodo({ title: '', description: '', priority: 'medium' });
+      setShowAddModal(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add todo');
+    }
   };
 
-  const toggleTodo = (id: string) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+  const handleToggleTodo = async (id: string) => {
+    try {
+      await toggleTodoComplete(id);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update todo');
+    }
   };
 
-  const deleteTodo = (id: string) => {
+  const handleDeleteTodo = (id: string) => {
     Alert.alert(
       'Delete Todo',
       'Are you sure you want to delete this todo?',
@@ -122,7 +96,13 @@ export default function TodoListScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => setTodos(todos.filter(todo => todo.id !== id)),
+          onPress: async () => {
+            try {
+              await deleteTodo(id);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete todo');
+            }
+          },
         },
       ]
     );
@@ -138,28 +118,27 @@ export default function TodoListScreen() {
     setShowAddModal(true);
   };
 
-  const saveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newTodo.title.trim()) {
       Alert.alert('Error', 'Please enter a title for the todo');
       return;
     }
 
     if (editingTodo) {
-      setTodos(todos.map(todo =>
-        todo.id === editingTodo.id
-          ? {
-              ...todo,
-              title: newTodo.title,
-              description: newTodo.description,
-              priority: newTodo.priority,
-            }
-          : todo
-      ));
-    }
+      try {
+        await updateTodo(editingTodo.id, {
+          title: newTodo.title,
+          description: newTodo.description,
+          priority: newTodo.priority,
+        });
 
-    setEditingTodo(null);
-    setNewTodo({ title: '', description: '', priority: 'medium' });
-    setShowAddModal(false);
+        setEditingTodo(null);
+        setNewTodo({ title: '', description: '', priority: 'medium' });
+        setShowAddModal(false);
+      } catch (error) {
+        Alert.alert('Error', 'Failed to update todo');
+      }
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -215,7 +194,7 @@ export default function TodoListScreen() {
               <View key={todo.id} style={styles.todoCard}>
                 <TouchableOpacity
                   style={styles.todoContent}
-                  onPress={() => toggleTodo(todo.id)}
+                  onPress={() => handleToggleTodo(todo.id)}
                 >
                   <View style={styles.todoLeft}>
                     <Square size={20} color="#6b7280" />
@@ -243,9 +222,9 @@ export default function TodoListScreen() {
                   )}
                   {canDeleteTodos && (
                     <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => deleteTodo(todo.id)}
-                    >
+                          style={styles.actionButton}
+                          onPress={() => handleDeleteTodo(todo.id)}
+                        >
                       <Trash2 size={16} color="#ef4444" />
                     </TouchableOpacity>
                   )}
@@ -262,7 +241,7 @@ export default function TodoListScreen() {
               <View key={todo.id} style={[styles.todoCard, styles.completedCard]}>
                 <TouchableOpacity
                   style={styles.todoContent}
-                  onPress={() => toggleTodo(todo.id)}
+                  onPress={() => handleToggleTodo(todo.id)}
                 >
                   <View style={styles.todoLeft}>
                     <CheckSquare size={20} color="#10b981" />
@@ -277,10 +256,10 @@ export default function TodoListScreen() {
                   </View>
                 </TouchableOpacity>
                 {canDeleteTodos && (
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => deleteTodo(todo.id)}
-                  >
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => handleDeleteTodo(todo.id)}
+                      >
                     <Trash2 size={16} color="#ef4444" />
                   </TouchableOpacity>
                 )}
@@ -320,7 +299,7 @@ export default function TodoListScreen() {
               {editingTodo ? 'Edit Todo' : 'Add New Todo'}
             </Text>
             <TouchableOpacity
-              onPress={editingTodo ? saveEdit : addTodo}
+              onPress={editingTodo ? handleSaveEdit : handleAddTodo}
               style={styles.saveButton}
             >
               <Save size={20} color="#2563eb" />

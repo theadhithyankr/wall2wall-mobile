@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User } from '@/src/types';
+import { Tool, WorkLocation, Worker, Assignment, AttendanceRecord, DashboardStats, User, TodoItem } from '@/src/types';
 
 interface DataState {
   // Data
@@ -11,6 +11,7 @@ interface DataState {
   managers: User[];
   assignments: Assignment[];
   attendance: AttendanceRecord[];
+  todos: TodoItem[];
   
   // Loading states
   isLoading: boolean;
@@ -42,6 +43,12 @@ interface DataState {
   // Attendance
   recordAttendance: (record: Omit<AttendanceRecord, 'id' | 'createdAt'>) => Promise<void>;
   
+  // Todos
+  addTodo: (todo: Omit<TodoItem, 'id' | 'createdAt'>) => Promise<void>;
+  updateTodo: (id: string, updates: Partial<TodoItem>) => Promise<void>;
+  deleteTodo: (id: string) => Promise<void>;
+  toggleTodoComplete: (id: string) => Promise<void>;
+  
   // Stats
   getDashboardStats: () => DashboardStats;
 }
@@ -55,6 +62,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [managers, setManagers] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,13 +71,14 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   const loadData = async () => {
     try {
-      const [toolsData, locationsData, workersData, managersData, assignmentsData, attendanceData] = await Promise.all([
+      const [toolsData, locationsData, workersData, managersData, assignmentsData, attendanceData, todosData] = await Promise.all([
         AsyncStorage.getItem('tools'),
         AsyncStorage.getItem('locations'),
         AsyncStorage.getItem('workers'),
         AsyncStorage.getItem('managers'),
         AsyncStorage.getItem('assignments'),
-        AsyncStorage.getItem('attendance')
+        AsyncStorage.getItem('attendance'),
+        AsyncStorage.getItem('todos')
       ]);
 
       if (toolsData) setTools(JSON.parse(toolsData));
@@ -78,6 +87,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       if (managersData) setManagers(JSON.parse(managersData));
       if (assignmentsData) setAssignments(JSON.parse(assignmentsData));
       if (attendanceData) setAttendance(JSON.parse(attendanceData));
+      if (todosData) setTodos(JSON.parse(todosData));
       
       // Load sample data if empty
       if (!toolsData || !locationsData || !workersData) {
@@ -350,6 +360,40 @@ export const [DataProvider, useData] = createContextHook(() => {
     await saveData('attendance', updatedAttendance);
   };
 
+  // Todo management
+  const addTodo = async (todo: Omit<TodoItem, 'id' | 'createdAt'>) => {
+    const newTodo: TodoItem = {
+      ...todo,
+      id: generateId(),
+      createdAt: new Date().toISOString()
+    };
+    const updatedTodos = [...todos, newTodo];
+    setTodos(updatedTodos);
+    await saveData('todos', updatedTodos);
+  };
+
+  const updateTodo = async (id: string, updates: Partial<TodoItem>) => {
+    const updatedTodos = todos.map(todo => 
+      todo.id === id ? { ...todo, ...updates } : todo
+    );
+    setTodos(updatedTodos);
+    await saveData('todos', updatedTodos);
+  };
+
+  const deleteTodo = async (id: string) => {
+    const updatedTodos = todos.filter(todo => todo.id !== id);
+    setTodos(updatedTodos);
+    await saveData('todos', updatedTodos);
+  };
+
+  const toggleTodoComplete = async (id: string) => {
+    const updatedTodos = todos.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    );
+    setTodos(updatedTodos);
+    await saveData('todos', updatedTodos);
+  };
+
   // Dashboard stats
   const getDashboardStats = (): DashboardStats => {
     const toolsAvailable = tools.filter(t => t.status === 'Available').length;
@@ -388,6 +432,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     managers,
     assignments,
     attendance,
+    todos,
     isLoading,
     addTool,
     updateTool,
@@ -404,6 +449,10 @@ export const [DataProvider, useData] = createContextHook(() => {
     assignTool,
     unassignTool,
     recordAttendance,
+    addTodo,
+    updateTodo,
+    deleteTodo,
+    toggleTodoComplete,
     getDashboardStats
   } as DataState;
 });
