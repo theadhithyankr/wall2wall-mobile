@@ -75,8 +75,8 @@ function RootLayoutNav() {
       <Stack.Screen name="workers" options={{ headerShown: false }} />
       <Stack.Screen name="add-manager" options={{ headerShown: false }} />
       <Stack.Screen name="managers" options={{ headerShown: false }} />
-      <Stack.Screen name="location-detail/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="tool-detail/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="location-detail/[id]" />
+      <Stack.Screen name="tool-detail/[id]" />
       <Stack.Screen name="attendance-report" options={{ headerShown: false }} />
       <Stack.Screen name="tool-report" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false }} />

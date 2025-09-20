@@ -1,16 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useData } from '@/src/contexts/DataContext';
-import { MapPin, Phone, Wrench, Users, Edit, ArrowLeft } from 'lucide-react-native';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { MapPin, Phone, Wrench, Users, Edit, ArrowLeft, Trash2 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
 export default function LocationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { locations, tools, attendance } = useData();
+  const { locations, tools, attendance, deleteLocation } = useData();
+  const { user } = useAuth();
   
   const location = locations.find(l => l.id === id);
+
+  // Role-based permissions
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
+  const canDeleteLocation = isManager || isAdmin;
+
+  // Debug logging
+  console.log('Location Detail - User:', user);
+  console.log('Location Detail - User Role:', user?.role);
+  console.log('Location Detail - Can Delete:', canDeleteLocation);
+
+  const handleDeleteLocation = () => {
+    Alert.alert(
+      'Delete Location',
+      `Are you sure you want to delete "${location?.name}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteLocation(id);
+              Alert.alert(
+                'Success', 
+                'Location deleted successfully',
+                [
+                  { 
+                    text: 'OK', 
+                    onPress: () => router.replace('/(tabs)/locations')
+                  }
+                ]
+              );
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete location. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
   
   if (!location) {
     return (
@@ -49,9 +95,22 @@ export default function LocationDetailScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.push(`/edit-location/${location.id}` as any)}>
-              <Edit size={24} color="#2563eb" />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity 
+                onPress={() => router.push(`/edit-location/${location.id}` as any)}
+                style={styles.headerButton}
+              >
+                <Edit size={24} color="#2563eb" />
+              </TouchableOpacity>
+              {canDeleteLocation && (
+                <TouchableOpacity 
+                  onPress={handleDeleteLocation}
+                  style={[styles.headerButton, styles.deleteButton]}
+                >
+                  <Trash2 size={24} color="#dc2626" />
+                </TouchableOpacity>
+              )}
+            </View>
           )
         }} 
       />
@@ -168,7 +227,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  scrollView: {
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  deleteButton: {
+    marginLeft: 8,
+  },
+  content: {
     flex: 1,
   },
   errorContainer: {

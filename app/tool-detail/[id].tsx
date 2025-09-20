@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useData } from '@/src/contexts/DataContext';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { Package, MapPin, Calendar, AlertCircle, Edit, ArrowLeft, UserMinus } from 'lucide-react-native';
+import { Package, MapPin, Calendar, AlertCircle, Edit, ArrowLeft, UserMinus, Trash2 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
 export default function ToolDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { tools, locations, unassignTool } = useData();
+  const { tools, locations, unassignTool, deleteTool } = useData();
   const { user } = useAuth();
   
   const tool = tools.find(t => t.id === id);
@@ -20,6 +20,46 @@ export default function ToolDetailScreen() {
   const isWorker = user?.role === 'worker';
   const canAssignTools = isManager || isAdmin || isWorker; // All roles can assign tools
   const canEditTools = isManager || isAdmin; // Only managers and admins can edit tools
+  const canDeleteTools = isManager || isAdmin; // Only managers and admins can delete tools
+
+  // Debug logging
+  console.log('Tool Detail - User:', user);
+  console.log('Tool Detail - User Role:', user?.role);
+  console.log('Tool Detail - Can Delete:', canDeleteTools);
+
+  const handleDeleteTool = () => {
+    Alert.alert(
+      'Delete Tool',
+      `Are you sure you want to delete "${tool?.name}"? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTool(id);
+              Alert.alert(
+                'Success', 
+                'Tool deleted successfully',
+                [
+                  { 
+                    text: 'OK', 
+                    onPress: () => router.replace('/(tabs)/tools')
+                  }
+                ]
+              );
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete tool. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
   
   if (!tool) {
     return (
@@ -76,11 +116,24 @@ export default function ToolDetailScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            canEditTools && (
-              <TouchableOpacity onPress={() => router.push(`/edit-tool/${tool.id}` as any)}>
-                <Edit size={24} color="#2563eb" />
-              </TouchableOpacity>
-            )
+            <View style={styles.headerButtons}>
+              {canEditTools && (
+                <TouchableOpacity 
+                  onPress={() => router.push(`/edit-tool/${tool.id}` as any)}
+                  style={styles.headerButton}
+                >
+                  <Edit size={24} color="#2563eb" />
+                </TouchableOpacity>
+              )}
+              {canDeleteTools && (
+                <TouchableOpacity 
+                  onPress={handleDeleteTool}
+                  style={[styles.headerButton, styles.deleteButton]}
+                >
+                  <Trash2 size={24} color="#dc2626" />
+                </TouchableOpacity>
+              )}
+            </View>
           )
         }} 
       />
@@ -261,6 +314,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerButton: {
+    padding: 4,
+  },
+  deleteButton: {
+    marginLeft: 8,
   },
   scrollView: {
     flex: 1,
