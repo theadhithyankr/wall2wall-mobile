@@ -95,13 +95,8 @@ export interface TodoItem {
   dueDate?: string;
   assignedTo?: string; // User ID
   createdBy: string; // User ID
-  
-  // Access control fields
+  updatedAt: string;
   visibleToWorkers: boolean; // Whether workers can see this todo
-  editableByWorkers: boolean; // Whether workers can edit this todo
-  visibleToRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can view this todo
-  editableByRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can edit this todo
-}
   editableByWorkers: boolean; // Whether workers can edit this todo
   visibleToRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can view this todo
   editableByRoles: ('manager' | 'admin' | 'worker')[]; // Roles that can edit this todo

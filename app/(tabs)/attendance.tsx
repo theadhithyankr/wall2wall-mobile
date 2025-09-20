@@ -74,9 +74,9 @@ export default function AttendanceScreen() {
   // COMPUTED VALUES
   // ========================================
   
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   const permissions: LocationPermissions = {
     canViewAllAttendance: isAdmin || isManager,

@@ -12,9 +12,9 @@ export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const stats = getDashboardStats();
   const taskData = getUserTaskCount();
-  const isWorker = user?.role === 'Worker';
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
+  const isWorker = user?.role === 'worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
 
   const quickActions = isWorker ? [
     // Worker Quick Actions - Limited to their own tasks and attendance

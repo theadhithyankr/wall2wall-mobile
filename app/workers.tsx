@@ -11,9 +11,9 @@ export default function WorkersScreen() {
   const { user } = useAuth();
 
   // User management permissions based on role matrix
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   const canAddWorkers = isAdmin; // Only admins can add workers
   const canViewWorkers = isAdmin || isManager; // Admins and managers can view workers

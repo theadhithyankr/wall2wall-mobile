@@ -295,7 +295,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const newManager: User = {
       ...managerData,
       id: generateId(),
-      role: 'Manager',
+      role: 'manager',
       createdAt: new Date().toISOString()
     };
     const updatedManagers = [...managers, newManager];
@@ -376,8 +376,8 @@ export const [DataProvider, useData] = createContextHook(() => {
       // Set default permissions - managers can control these
       visibleToWorkers: todo.visibleToWorkers ?? true,
       editableByWorkers: todo.editableByWorkers ?? false,
-      visibleToRoles: todo.visibleToRoles ?? ['Manager', 'Admin', 'Worker'],
-      editableByRoles: todo.editableByRoles ?? ['Manager', 'Admin']
+      visibleToRoles: todo.visibleToRoles ?? ['manager', 'admin', 'worker'],
+      editableByRoles: todo.editableByRoles ?? ['manager', 'admin']
     };
     const updatedTodos = [...todos, newTodo];
     setTodos(updatedTodos);
@@ -427,12 +427,12 @@ export const [DataProvider, useData] = createContextHook(() => {
     
     return todos.filter(todo => {
       // Admins and managers can see all todos
-      if (user.role === 'Admin' || user.role === 'Manager') {
+      if (user.role === 'admin' || user.role === 'manager') {
         return true;
       }
       
       // Workers can only see todos they're allowed to see
-      if (user.role === 'Worker') {
+      if (user.role === 'worker') {
         return todo.visibleToWorkers;
       }
       
@@ -448,17 +448,17 @@ export const [DataProvider, useData] = createContextHook(() => {
     if (!todo) return false;
     
     // Admins can edit all todos
-    if (user.role === 'Admin') {
+    if (user.role === 'admin') {
       return true;
     }
     
     // Managers can edit todos they created or if they have edit permissions
-    if (user.role === 'Manager') {
+    if (user.role === 'manager') {
       return todo.createdBy === user.id || todo.editableByRoles.includes('manager');
     }
     
     // Workers can only edit if explicitly allowed
-    if (user.role === 'Worker') {
+    if (user.role === 'worker') {
       return todo.editableByWorkers;
     }
     
@@ -485,7 +485,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     dueToday += todosDueToday;
     
     // 2. For workers, add rented tools they need to return
-    if (user.role === 'Worker') {
+    if (user.role === 'worker') {
       const rentedToolsDueToday = tools.filter(t => 
         t.ownershipType === 'Rented' && 
         t.expectedReturnDate?.split('T')[0] === today &&

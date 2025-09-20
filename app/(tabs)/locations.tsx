@@ -13,9 +13,9 @@ export default function LocationsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Location management permissions based on role matrix
-  const isManager = user?.role === 'Manager';
-  const isAdmin = user?.role === 'Admin';
-  const isWorker = user?.role === 'Worker';
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
+  const isWorker = user?.role === 'worker';
   
   const canAddLocations = isManager || isAdmin; // Managers and admins can add locations
   const canEditLocations = isManager || isAdmin; // Managers and admins can edit locations

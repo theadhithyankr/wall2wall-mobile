@@ -15,9 +15,9 @@ export default function ToolDetailScreen() {
   const tool = tools.find(t => t.id === id);
   
   // Role-based permissions
-  const isManager = user?.role === 'Manager';
-  const isAdmin = user?.role === 'Admin';
-  const isWorker = user?.role === 'Worker';
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
+  const isWorker = user?.role === 'worker';
   const canAssignTools = isManager || isAdmin || isWorker; // All roles can assign tools
   const canEditTools = isManager || isAdmin; // Only managers and admins can edit tools
   

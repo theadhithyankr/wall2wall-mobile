@@ -20,9 +20,9 @@ export default function ManagersScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   // User management permissions based on role matrix
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   const canAddManagers = isAdmin; // Only admins can add managers
   const canViewManagers = isAdmin; // Only admins can view managers

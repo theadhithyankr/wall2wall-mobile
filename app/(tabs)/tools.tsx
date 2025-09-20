@@ -19,9 +19,9 @@ export default function ToolsScreen() {
   });
 
   // Tool management permissions based on role matrix
-  const isManager = user?.role === 'Manager';
-  const isAdmin = user?.role === 'Admin';
-  const isWorker = user?.role === 'Worker';
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
+  const isWorker = user?.role === 'worker';
   
   const canAddTools = isManager || isAdmin; // Managers and admins can add tools
   const canEditTools = isManager || isAdmin; // Managers and admins can edit tools

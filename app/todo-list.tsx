@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
   Alert,
   Modal,
+  Switch,
+  Dimensions,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -16,14 +20,13 @@ import {
   Plus,
   CheckSquare,
   Square,
+  Filter,
+  X,
   Edit3,
   Trash2,
-  X,
-  Save,
-  Calendar,
-  Clock,
-  Tool,
+  AlertCircle,
   LogIn,
+  Save,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { TodoItem } from '../src/types';
@@ -37,6 +40,7 @@ export default function TodoListScreen() {
     title: '',
     description: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
+    assignedTo: undefined as string | undefined,
     visibleToWorkers: true,
     editableByWorkers: false,
   });
@@ -46,9 +50,9 @@ export default function TodoListScreen() {
   const taskData = getUserTaskCount();
   
   // Todo permissions based on role matrix
-  const isManager = user?.role === 'Manager';
-  const isAdmin = user?.role === 'Admin';
-  const isWorker = user?.role === 'Worker';
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
+  const isWorker = user?.role === 'worker';
   
   const canAccessTodoList = isManager || isAdmin || isWorker; // All roles can access, but see different content
   const canCreateTodos = isManager || isAdmin; // Managers and admins can create todos
@@ -73,18 +77,20 @@ export default function TodoListScreen() {
         description: newTodo.description,
         completed: false,
         priority: newTodo.priority,
-        assignedTo: user?.id,
+        assignedTo: newTodo.assignedTo,
         createdBy: user?.id || '',
         visibleToWorkers: newTodo.visibleToWorkers,
         editableByWorkers: newTodo.editableByWorkers,
-        visibleToRoles: newTodo.visibleToWorkers ? ['Manager', 'Admin', 'Worker'] : ['Manager', 'Admin'],
-        editableByRoles: newTodo.editableByWorkers ? ['Manager', 'Admin', 'Worker'] : ['Manager', 'Admin']
+        visibleToRoles: newTodo.visibleToWorkers ? ['manager', 'admin', 'worker'] : ['manager', 'admin'],
+        editableByRoles: newTodo.editableByWorkers ? ['manager', 'admin', 'worker'] : ['manager', 'admin'],
+        updatedAt: new Date().toISOString()
       });
 
       setNewTodo({ 
         title: '', 
         description: '', 
         priority: 'medium',
+        assignedTo: undefined,
         visibleToWorkers: true,
         editableByWorkers: false
       });
@@ -134,6 +140,7 @@ export default function TodoListScreen() {
       title: todo.title,
       description: todo.description,
       priority: todo.priority,
+      assignedTo: todo.assignedTo,
       visibleToWorkers: todo.visibleToWorkers,
       editableByWorkers: todo.editableByWorkers,
     });
@@ -163,6 +170,7 @@ export default function TodoListScreen() {
           title: '', 
           description: '', 
           priority: 'medium',
+          assignedTo: undefined,
           visibleToWorkers: true,
           editableByWorkers: false
         });
@@ -301,7 +309,7 @@ export default function TodoListScreen() {
               <View key={tool.id} style={[styles.todoCard, styles.systemTaskCard]}>
                 <View style={styles.todoContent}>
                   <View style={styles.todoLeft}>
-                    <Tool size={20} color="#dc2626" />
+                    <AlertCircle size={20} color="#dc2626" />
                     <View style={styles.todoText}>
                       <Text style={styles.todoTitle}>Return {tool.name}</Text>
                       <Text style={styles.todoDescription}>
@@ -438,6 +446,7 @@ export default function TodoListScreen() {
                   title: '', 
                   description: '', 
                   priority: 'medium',
+                  assignedTo: undefined,
                   visibleToWorkers: true,
                   editableByWorkers: false
                 });
@@ -779,7 +788,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderColor: '#e5e7eb',
-    transition: 'all 0.2s ease',
   },
   prioritySelected: {
     borderWidth: 2,

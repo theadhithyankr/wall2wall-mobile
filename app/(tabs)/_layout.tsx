@@ -5,7 +5,7 @@ import { useAuth } from "@/src/contexts/AuthContext";
 
 export default function TabLayout() {
   const { user } = useAuth();
-  const isWorker = user?.role === 'Worker';
+  const isWorker = user?.role === 'worker';
 
   return (
     <Tabs

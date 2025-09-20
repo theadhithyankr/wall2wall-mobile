@@ -52,14 +52,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         // Demo: Assign roles based on phone number prefix
         // 9900* -> Admin, 9911* -> Manager, others -> Worker
         const rolePrefix = phone.slice(-2);
-        let role: 'Admin' | 'Manager' | 'Worker' = 'Worker';
+        let role: 'admin' | 'manager' | 'worker' = 'worker';
         let name = 'Worker';
 
         if (rolePrefix === '00') {
-          role = 'Admin';
+          role = 'admin';
           name = 'Admin';
         } else if (rolePrefix === '11') {
-          role = 'Manager';
+          role = 'manager';
           name = 'Manager';
         }
 
@@ -68,6 +68,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           phone,
           name,
           role,
+          email: `${role.toLowerCase()}@wall2wall.com`,
           createdAt: new Date().toISOString()
         };
         

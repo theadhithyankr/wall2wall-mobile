@@ -20,9 +20,9 @@ export default function AttendanceReportScreen() {
   const [endDateObj, setEndDateObj] = useState(new Date());
 
   // Report permissions based on role matrix
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   const canViewAllReports = isAdmin || isManager; // Admin and Manager can view all reports
   const canExportReports = isAdmin || isManager; // Admin and Manager can export reports

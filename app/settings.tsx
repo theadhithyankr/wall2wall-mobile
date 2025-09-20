@@ -14,9 +14,9 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Settings permissions based on role matrix
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   const canConfigureSystem = isAdmin; // Only admins can configure system settings
   const canConfigurePersonal = true; // All users can configure personal settings

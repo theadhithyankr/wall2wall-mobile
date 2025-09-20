@@ -17,10 +17,10 @@ import { router } from 'expo-router';
 
 export default function MoreScreen() {
   const { user, logout } = useAuth();
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
-  const canAccessTodoList = ['Admin', 'Manager', 'Worker'].includes(user?.role || ''); // All roles can access todo list
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
+  const canAccessTodoList = ['admin', 'manager', 'worker'].includes(user?.role || ''); // All roles can access todo list
   const canAssignTools = isAdmin || isManager || isWorker; // All roles can assign tools
 
   const menuSections = [

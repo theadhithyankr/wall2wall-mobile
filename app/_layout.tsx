@@ -15,9 +15,9 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, user } = useAuth();
   // Role-based permissions according to the permission matrix
-  const isAdmin = user?.role === 'Admin';
-  const isManager = user?.role === 'Manager';
-  const isWorker = user?.role === 'Worker';
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const isWorker = user?.role === 'worker';
   
   // User Management - Admin only
   const canManageUsers = isAdmin;
