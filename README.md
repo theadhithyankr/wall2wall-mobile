@@ -1,43 +1,77 @@
+<div align="center">
+
 # Wall2Wall Mobile
 
-Expo Router React Native app for a native mobile experience with Rork-generated project structure.
+Mobile app for browsing or managing wall and decor content.
+
+![React](https://img.shields.io/badge/React-20232A?logo=react) ![Expo](https://img.shields.io/badge/Expo-000020?logo=expo) ![React Native](https://img.shields.io/badge/React_Native-20232A?logo=react)
+
+[Repository](https://github.com/theadhithyankr/wall2wall-mobile)
+
+</div>
+
+## Overview
+
+Wall2Wall Mobile is a mobile content project in the TheAdhithyanKR/wall2wall-mobile repository. Expo Router React Native app for a native mobile experience with Rork-generated project structure.
+
+The README was written from the repository contents, including its manifest files, source tree, and available project metadata. The primary manifest is $(System.Collections.Hashtable.Path), and the commands below are taken from its scripts.
 
 ## Key Features
-- Expo Router React Native app for a native mobile experience with Rork-generated project structure
-- Organized UI components and screens make the main user flows visible from the project structure.
-- Existing media assets are referenced only where they are already present in the repository.
-- Package scripts provide reproducible development, build, and preview commands.
+
+- Mobile-first browsing workflow
+- Screen structure for visual content or product exploration
+- Project setup for local emulator testing
+- Clear foundation for a branded mobile experience
 
 ## Tech Stack
-- JavaScript/TypeScript
+
 - React
 - Expo
 - React Native
 
 ## Project Structure
-- src/app or app - application routes, screens, and layout files.
-- public / assets - static images, icons, manifests, and visual assets.
 
-## Setup and Run
-```bash
-git clone https://github.com/theadhithyankr/wall2wall-mobile.git
-cd wall2wall-mobile
+`	ext
+.
+|-- app.json
+|-- app/_layout.tsx
+|-- app/+not-found.tsx
+|-- app/add-location.tsx
+|-- app/add-manager.tsx
+|-- app/add-tool.tsx
+|-- app/add-worker.tsx
+|-- app/assign-tool.tsx
+|-- app/attendance-report.tsx
+|-- app/login.tsx
+|-- app/managers.tsx
+|-- app/otp.tsx
+|-- app/settings.tsx
+|-- app/todo-list.tsx
+|-- app/tool-report.tsx
+|-- app/workers.tsx
+|-- bun.lock
+|-- eslint.config.js
+|-- package.json
+|-- package-lock.json
+|-- README.md
+|-- SETUP.md
+|-- tsconfig.json
+`
+
+## Setup
+
+`ash
 npm install
-npm run start
-npm run android
-npm run ios
-```
-
-## Screenshots and Media
-- Existing asset: assets/images/adaptive-icon.png
-- Existing asset: assets/images/favicon.png
-- Existing asset: assets/images/icon.png
-- Existing asset: assets/images/splash-icon.png
+npm start
+`
 
 ## What This Project Demonstrates
-- Building user-facing web applications with component-based UI and modern frontend tooling.
-- Structuring a mobile app around reusable screens, assets, and platform run scripts.
-- Presenting project scope, setup, and technical choices clearly for reviewers and recruiters.
 
-## Repository
-- GitHub: https://github.com/theadhithyankr/wall2wall-mobile
+- Ability to turn a focused product idea into a working codebase
+- Practical use of the repository's chosen framework and tooling
+- Attention to deployable structure, repeatable setup, and portfolio-ready presentation
+- Project-specific implementation around mobile content
+
+## Links
+
+- Repository: [https://github.com/theadhithyankr/wall2wall-mobile](https://github.com/theadhithyankr/wall2wall-mobile)
