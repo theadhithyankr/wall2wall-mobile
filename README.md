@@ -14,7 +14,7 @@ Mobile app for browsing or managing wall and decor content.
 
 Wall2Wall Mobile is a mobile content project in the TheAdhithyanKR/wall2wall-mobile repository. Expo Router React Native app for a native mobile experience with Rork-generated project structure.
 
-The README was written from the repository contents, including its manifest files, source tree, and available project metadata. The primary manifest is $(System.Collections.Hashtable.Path), and the commands below are taken from its scripts.
+The README was written from the repository contents, including its manifest files, source tree, and available project metadata. The primary manifest is $(@{Path=package.json; Json=}.Path), and the commands below are taken from its scripts.
 
 ## Key Features
 
@@ -31,7 +31,7 @@ The README was written from the repository contents, including its manifest file
 
 ## Project Structure
 
-`	ext
+```text
 .
 |-- app.json
 |-- app/_layout.tsx
@@ -56,14 +56,14 @@ The README was written from the repository contents, including its manifest file
 |-- README.md
 |-- SETUP.md
 |-- tsconfig.json
-`
+```
 
 ## Setup
 
-`ash
+```bash
 npm install
 npm start
-`
+```
 
 ## What This Project Demonstrates
 
